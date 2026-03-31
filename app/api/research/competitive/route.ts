@@ -3,20 +3,25 @@ import { competitivePrompt } from '@/lib/prompts'
 import { writeResearch, readCompany, readSpace } from '@/lib/store'
 
 export async function POST(req: Request) {
-  const { companyId } = await req.json()
+  const { companyId, description: descriptionOverride } = await req.json()
   if (!companyId) return new Response('companyId required', { status: 400 })
 
   const company = readCompany(companyId)
   if (!company) return new Response('company not found', { status: 404 })
 
   const space = readSpace(company.spaceId)
-  const spaceName = space?.name ?? 'this space'
-  const thesis = space?.thesis
+  const description = descriptionOverride ?? company.description
 
-  const prompt = competitivePrompt(company.name, spaceName, thesis)
+  const prompt = competitivePrompt(
+    company.name,
+    description,
+    space?.name,
+    space?.thesis
+  )
+
   let fullText = ''
 
-  const upstream = await streamResearch(prompt)
+  const upstream = await streamResearch(prompt, company.pitchDeckPath)
   const reader = upstream.getReader()
   const encoder = new TextEncoder()
 
@@ -26,9 +31,9 @@ export async function POST(req: Request) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = new TextDecoder().decode(value)
-        const match = chunk.match(/data: ({.*})/g)
-        if (match) {
-          for (const m of match) {
+        const matches = chunk.match(/data: ({.*})/g)
+        if (matches) {
+          for (const m of matches) {
             try {
               const parsed = JSON.parse(m.replace('data: ', ''))
               if (parsed.text) fullText += parsed.text
@@ -38,12 +43,7 @@ export async function POST(req: Request) {
         controller.enqueue(value)
       }
       if (fullText) {
-        writeResearch({
-          companyId,
-          type: 'competitive',
-          content: fullText,
-          generatedAt: new Date().toISOString(),
-        })
+        writeResearch({ companyId, type: 'competitive', content: fullText, generatedAt: new Date().toISOString() })
       }
       controller.enqueue(encoder.encode('data: [DONE]\n\n'))
       controller.close()

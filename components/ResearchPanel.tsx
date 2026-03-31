@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import type { Company } from '@/lib/types'
 
 interface Props {
@@ -13,10 +13,12 @@ function StreamingReport({
   companyId,
   type,
   saved,
+  description,
 }: {
   companyId: string
   type: 'dd' | 'competitive'
   saved: string | null
+  description: string
 }) {
   const [content, setContent] = useState(saved ?? '')
   const [streaming, setStreaming] = useState(false)
@@ -35,7 +37,7 @@ function StreamingReport({
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId }),
+        body: JSON.stringify({ companyId, description: description.trim() || undefined }),
         signal: abortRef.current.signal,
       })
 
@@ -124,9 +126,85 @@ function StreamingReport({
 
 export default function ResearchPanel({ company, savedDD, savedCompetitive }: Props) {
   const [tab, setTab] = useState<'dd' | 'competitive'>('dd')
+  const [description, setDescription] = useState(company.description ?? '')
+  const [deckName, setDeckName] = useState<string | null>(
+    company.pitchDeckPath ? company.pitchDeckPath.split('/').pop() ?? null : null
+  )
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function saveDescription() {
+    await fetch(`/api/companies`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: company.id, description: description.trim() || null }),
+    })
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch(`/api/companies/${company.id}/upload`, {
+        method: 'POST',
+        body: form,
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        setUploadError(json.error ?? 'Upload failed')
+      } else {
+        setDeckName(file.name)
+      }
+    } catch {
+      setUploadError('Upload failed')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
+      {/* Context section */}
+      <div className="px-6 py-4 border-b border-white/10 space-y-3">
+        <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Context for Claude</p>
+        <textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          onBlur={saveDescription}
+          placeholder="Describe what this company does — technology, indication, approach, stage..."
+          rows={3}
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/25 resize-none focus:outline-none focus:border-amber-400/40"
+        />
+        <div className="flex items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : 'Upload Pitch Deck (PDF)'}
+          </button>
+          {deckName && (
+            <span className="text-xs text-white/40 truncate max-w-[200px]">{deckName}</span>
+          )}
+          {uploadError && (
+            <span className="text-xs text-red-400">{uploadError}</span>
+          )}
+        </div>
+      </div>
+
       {/* Tab bar */}
       <div className="flex border-b border-white/10 px-6">
         {(['dd', 'competitive'] as const).map(t => (
@@ -146,10 +224,10 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
 
       <div className="flex-1 overflow-hidden">
         {tab === 'dd' && (
-          <StreamingReport companyId={company.id} type="dd" saved={savedDD} />
+          <StreamingReport companyId={company.id} type="dd" saved={savedDD} description={description} />
         )}
         {tab === 'competitive' && (
-          <StreamingReport companyId={company.id} type="competitive" saved={savedCompetitive} />
+          <StreamingReport companyId={company.id} type="competitive" saved={savedCompetitive} description={description} />
         )}
       </div>
     </div>

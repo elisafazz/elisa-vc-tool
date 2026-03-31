@@ -18,6 +18,8 @@ export async function POST(req: Request) {
     website: website?.trim() || null,
     stage: stage?.trim() || null,
     oneLiner: oneLiner?.trim() || null,
+    description: null,
+    pitchDeckPath: null,
     status: (status as CompanyStatus) ?? 'Sourced',
     addedAt: new Date().toISOString(),
     seenAt: null,

@@ -43,6 +43,8 @@ export async function POST(req: Request) {
       website: item.website || null,
       stage: item.stage || null,
       oneLiner: item.oneLiner || null,
+      description: null,
+      pitchDeckPath: null,
       status: 'Sourced',
       addedAt: new Date().toISOString(),
       seenAt: null,

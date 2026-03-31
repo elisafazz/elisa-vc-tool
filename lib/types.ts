@@ -16,6 +16,8 @@ export interface Company {
   website: string | null
   stage: string | null
   oneLiner: string | null
+  description: string | null   // free-text context: what the company does, tech, indication
+  pitchDeckPath: string | null // absolute path to uploaded PDF on disk
   status: CompanyStatus
   addedAt: string
   seenAt: string | null

@@ -1,18 +1,21 @@
-// Prompts derived exactly from the Claude Code skill files:
+// Prompts derived from Claude Code skill files + enhanced for context-aware research:
 // /company-brief SKILL.md → ddPrompt
-// market-research agent → competitivePrompt
+// market-research agent → competitivePrompt (enhanced for multi-dimensional landscape)
 // Custom sourcing prompt → sourcingPrompt
 
-export function ddPrompt(companyName: string, context?: string): string {
+export function ddPrompt(companyName: string, description?: string | null): string {
+  const contextBlock = description?.trim()
+    ? `\nWhat we know about this company:\n${description.trim()}\n`
+    : ''
+
   return `Quick company analysis — 1-page brief for a meeting, intro call, or sector scan.
 
-Company: ${companyName}
-${context ? `Additional context: ${context}` : ''}
-
+Company: ${companyName}${contextBlock}
 Search comprehensively before drafting:
 - Company website, LinkedIn, Crunchbase, SEC/EDGAR, PitchBook press releases
 - Recent news (Google News, TechCrunch, STAT News, FierceBiotech as relevant)
 - Academic/clinical literature on the underlying science via PubMed if applicable
+- ClinicalTrials.gov if the company is clinical-stage
 
 Then produce the brief below.
 
@@ -32,9 +35,9 @@ Output format: bullet points only — no prose. Every factual claim has a direct
 - [Founder — title, prior roles] (LinkedIn — link)
 - [Co-founder if applicable] (source — link)
 
-**Product**
+**Product / Technology**
 - [What it is, how it works] (source — link)
-- [Who uses it] (source — link)
+- [Who uses it / indication / customer] (source — link)
 - [Business model] (source — link)
 
 **Differentiation**
@@ -47,7 +50,7 @@ Output format: bullet points only — no prose. Every factual claim has a direct
 
 **Traction**
 - [Metric — stated exactly as reported] (source — link or *(Unverified)*)
-- [Customer / partnership / regulatory milestone] (source — link)
+- [Customer / partnership / regulatory / clinical milestone] (source — link)
 
 **Scientific / clinical foundation** *(if applicable)*
 - [Key supporting study or finding] (PubMed PMID — link)
@@ -71,51 +74,82 @@ Rules:
 - Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)*`
 }
 
-export function competitivePrompt(companyName: string, spaceName: string, thesis?: string): string {
-  return `Research ${companyName} and the ${spaceName} competitive landscape for VC diligence purposes.
-${thesis ? `Space thesis: ${thesis}` : ''}
+export function competitivePrompt(
+  companyName: string,
+  description?: string | null,
+  spaceName?: string | null,
+  thesis?: string | null
+): string {
+  const contextBlock = description?.trim()
+    ? `\nWhat we know about this company:\n${description.trim()}\n`
+    : ''
 
-Search comprehensively before drafting:
-- Company website, LinkedIn, Crunchbase, SEC/EDGAR, PitchBook press releases
-- Recent news (Google News, TechCrunch, STAT News, FierceBiotech as relevant)
-- Academic/clinical literature via PubMed if the topic involves science or medicine
+  const spaceBlock = spaceName ? `\nInvestment space: ${spaceName}${thesis ? `\nThesis: ${thesis}` : ''}` : ''
 
-Output format: bullet points only — no prose. Every factual claim has a direct-linked primary source in parentheses immediately after the bullet. No subjective assessment or editorial judgment — report only what sources state.
+  return `You are a VC analyst running competitive and landscape diligence on ${companyName}.
+${contextBlock}${spaceBlock}
 
-**Market overview**
-- [Market size — state exact figure and who produced it] (Source — link)
-- [Growth rate] (Source — link)
-- [Key tailwind or regulatory driver] (Source — link)
+Your task is to map the full competitive and scientific landscape relevant to this company — not just direct competitors, but ALL approaches addressing the same problem.
 
-**Competitive landscape**
-- [Competitor — factual description, funding, stage] (Source — link)
-- [Competitor 2] (Source — link)
-- [Competitor 3] (Source — link)
+STEP 1 — Characterize the company
+Using the context above and web search, establish:
+- Disease area or market (e.g., Type 1 Diabetes, enterprise security, logistics)
+- Specific modality or approach (e.g., stem cell-derived beta cell replacement, LLM-based SIEM, autonomous last-mile delivery)
+- Development stage (preclinical / clinical / commercial)
+- Key differentiation claim
 
-**Technology / product landscape**
-- [Approach or platform description] (Source — link)
-- [What is novel or differentiated — note if company-claimed vs. independent] (Source — link)
+STEP 2 — Research the full landscape across ALL of the following dimensions:
 
-**Recent news and funding activity (last 12 months)**
-- [Event — stated exactly as reported] (Source — link)
+**Disease / market overview**
+- Epidemiology or market size — state exact figure and source
+- Standard of care or incumbent solution
+- Key unmet need this company addresses
+- Relevant regulatory body / pathway (FDA, EMA, FTC, etc.)
+Sources: PubMed, clinical guidelines, WHO, market research firms, news
 
-**Scientific / clinical foundation** (if applicable)
-- [Key supporting study or finding] (PubMed PMID — link)
-- [Conflicting or cautionary finding if present] (PubMed PMID — link)
+**All competing modalities**
+For EACH distinct approach addressing the same disease or problem — even if not the same modality as the company:
+- Approach name, mechanism, lead companies, stage, funding
+- Example: for a T1D cell therapy company, cover: autologous cell therapy, allogeneic cell therapy, gene therapy, islet transplant, closed-loop insulin delivery, immunotherapy
+Sources: ClinicalTrials.gov, Crunchbase, news, company websites
+
+**Clinical pipeline** *(if applicable — skip if not a clinical-stage company or indication)*
+Search ClinicalTrials.gov for active and completed trials in this indication:
+- Trial ID (NCT number), sponsor, phase, primary endpoint, status, enrollment
+Sources: clinicaltrials.gov — link each trial directly
+
+**Scientific foundation**
+Key studies that validate or challenge the approach:
+- Supporting studies: mechanism validation, proof-of-concept
+- Cautionary or conflicting findings
+Sources: PubMed — cite PMID and direct link for every study
+
+**Regulatory landscape**
+- Precedent approvals or clearances in this space
+- Relevant FDA/EMA guidance documents
+- Any regulatory risk specific to this modality
+Sources: FDA.gov, EMA.europa.eu, news
+
+**Funding activity (last 24 months)**
+Rounds, partnerships, acquisitions across the space — not just the target company:
+- Company, round size, date, lead investors, strategic rationale
+Sources: Crunchbase, TechCrunch, press releases — link each
 
 **Key risks**
-- [Risk stated factually — no softening] (Source if applicable)
+- Scientific, clinical, regulatory, competitive, or commercial risks stated factually
+- No softening, no editorializing
 
 **Open questions for diligence**
-- [Specific unanswered question]
+- Specific unanswered factual questions that would materially change the investment view
 
 Rules:
-- Bullet points only
+- Bullet points only — no prose paragraphs
 - Direct link on every source — no bare citations
 - No subjective assessment, opinion, or qualitative judgment
-- Do not fabricate metrics or funding rounds
-- Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)*
-- Conflicting sources: *(Conflicting)*`
+- Do not fabricate trial IDs, funding rounds, or study results
+- Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)* | Conflicting: *(Conflicting)*
+- For PubMed: always include PMID and direct link https://pubmed.ncbi.nlm.nih.gov/[PMID]
+- For ClinicalTrials: always include NCT number and direct link https://clinicaltrials.gov/study/[NCT]`
 }
 
 export function sourcingPrompt(spaceName: string, thesis: string, existingNames: string[]): string {
