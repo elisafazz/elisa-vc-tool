@@ -3,7 +3,7 @@ import path from 'path'
 import type { Space, Company, Research, AlertLogEntry } from './types'
 
 function dataDir(): string {
-  return process.env.DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), 'data')
+  return process.env.DATA_DIR ?? '/tmp/fti-data'
 }
 
 function resolve(...parts: string[]): string {
@@ -11,7 +11,9 @@ function resolve(...parts: string[]): string {
 }
 
 function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  try {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  } catch {}
 }
 
 function readJSON<T>(filePath: string): T | null {
@@ -30,12 +32,16 @@ function writeJSON(filePath: string, data: unknown) {
 // --- Spaces ---
 
 export function listSpaces(): Space[] {
-  const dir = resolve('spaces')
-  ensureDir(dir)
-  return fs.readdirSync(dir)
-    .filter(f => f.endsWith('.json'))
-    .map(f => readJSON<Space>(path.join(dir, f)))
-    .filter(Boolean) as Space[]
+  try {
+    const dir = resolve('spaces')
+    ensureDir(dir)
+    return fs.readdirSync(dir)
+      .filter(f => f.endsWith('.json'))
+      .map(f => readJSON<Space>(path.join(dir, f)))
+      .filter(Boolean) as Space[]
+  } catch {
+    return []
+  }
 }
 
 export function readSpace(id: string): Space | null {
@@ -49,13 +55,17 @@ export function writeSpace(space: Space) {
 // --- Companies ---
 
 export function listCompanies(spaceId?: string): Company[] {
-  const dir = resolve('companies')
-  ensureDir(dir)
-  const all = fs.readdirSync(dir)
-    .filter(f => f.endsWith('.json'))
-    .map(f => readJSON<Company>(path.join(dir, f)))
-    .filter(Boolean) as Company[]
-  return spaceId ? all.filter(c => c.spaceId === spaceId) : all
+  try {
+    const dir = resolve('companies')
+    ensureDir(dir)
+    const all = fs.readdirSync(dir)
+      .filter(f => f.endsWith('.json'))
+      .map(f => readJSON<Company>(path.join(dir, f)))
+      .filter(Boolean) as Company[]
+    return spaceId ? all.filter(c => c.spaceId === spaceId) : all
+  } catch {
+    return []
+  }
 }
 
 export function readCompany(id: string): Company | null {
