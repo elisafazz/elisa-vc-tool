@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DM_Serif_Display, DM_Sans } from 'next/font/google'
+import GlobalHeader from '@/components/GlobalHeader'
 import './globals.css'
 
 const dmSerif = DM_Serif_Display({
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${dmSerif.variable} ${dmSans.variable}`}>
       <body className={`${dmSans.className} bg-gray-950 text-white antialiased`}>
-        {children}
+        <GlobalHeader />
+        <div className="pt-9">
+          {children}
+        </div>
       </body>
     </html>
   )
