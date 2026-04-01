@@ -1,32 +1,42 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { readCompany, writeCompany } from '@/lib/store'
 import fs from 'fs'
 import path from 'path'
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const DATA_DIR = process.env.DATA_DIR ?? '/tmp/fti-data'
+const PDF_LIMIT = 3 * 1024 * 1024
+const TXT_LIMIT = 1 * 1024 * 1024
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const company = readCompany(id)
-  if (!company) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  if (!company) return Response.json({ error: 'company not found' }, { status: 404 })
 
-  const formData = await req.formData()
-  const file = formData.get('file') as File | null
-  if (!file) return NextResponse.json({ error: 'no file' }, { status: 400 })
-  if (file.type !== 'application/pdf') {
-    return NextResponse.json({ error: 'only PDF files accepted' }, { status: 400 })
+  const form = await req.formData()
+  const file = form.get('file') as File | null
+  if (!file) return Response.json({ error: 'no file' }, { status: 400 })
+
+  const isPdf = file.type === 'application/pdf'
+  const isTxt = file.type === 'text/plain' || file.name.endsWith('.txt')
+
+  if (!isPdf && !isTxt) {
+    return Response.json({ error: 'Only PDF or .txt files accepted' }, { status: 400 })
+  }
+  if (isPdf && file.size > PDF_LIMIT) {
+    return Response.json({ error: 'PDF too large (max 3 MB)' }, { status: 413 })
+  }
+  if (isTxt && file.size > TXT_LIMIT) {
+    return Response.json({ error: 'Text file too large (max 1 MB)' }, { status: 413 })
   }
 
-  const uploadsDir = path.join(process.env.DATA_DIR ?? '/tmp/fti-data', 'uploads')
-  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
+  const ext = isPdf ? '.pdf' : '.txt'
+  const filename = `deck-${company.id}${ext}`
+  const filePath = path.join(DATA_DIR, filename)
 
-  const destPath = path.join(uploadsDir, `${id}.pdf`)
-  const buffer = Buffer.from(await file.arrayBuffer())
-  fs.writeFileSync(destPath, buffer)
+  const bytes = await file.arrayBuffer()
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+  fs.writeFileSync(filePath, Buffer.from(bytes))
 
-  const updated = { ...company, pitchDeckPath: destPath }
-  writeCompany(updated)
-
-  return NextResponse.json({ path: destPath })
+  writeCompany({ ...company, pitchDeckPath: filePath })
+  return Response.json({ ok: true })
 }

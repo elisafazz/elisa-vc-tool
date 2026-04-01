@@ -240,7 +240,7 @@ export default function NewSpacePage() {
                     <div className="text-left">
                       <p className={`text-sm font-medium transition-colors ${alertsEnabled ? 'text-white/80' : 'text-white/50'}`}>Weekly email alerts</p>
                       <p className="text-white/30 text-xs mt-0.5">
-                        {alertsEnabled ? 'Sends every Monday — funding, FDA, company news' : 'Get weekly digests of news, funding, FDA updates, and company announcements in this space'}
+                        {alertsEnabled ? 'Sends every Monday - funding, FDA, company news' : 'Get weekly digests of news, funding, FDA updates, and company announcements in this space'}
                       </p>
                     </div>
                   </div>

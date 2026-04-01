@@ -10,6 +10,7 @@ export async function POST(req: Request) {
   let companyName = '', description = '', type = '', spaceName = '', thesis = ''
   let existingCompanyId: string | null = null
   let pdfBase64: string | null = null
+  let deckText: string | null = null
 
   if (contentType.includes('multipart/form-data')) {
     const form = await req.formData()
@@ -20,9 +21,13 @@ export async function POST(req: Request) {
     thesis = (form.get('thesis') as string) ?? ''
     existingCompanyId = (form.get('companyId') as string) || null
     const file = form.get('pdf') as File | null
-    if (file && file.type === 'application/pdf') {
-      const bytes = await file.arrayBuffer()
-      pdfBase64 = Buffer.from(bytes).toString('base64')
+    if (file) {
+      if (file.type === 'application/pdf') {
+        const bytes = await file.arrayBuffer()
+        pdfBase64 = Buffer.from(bytes).toString('base64')
+      } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        deckText = await file.text()
+      }
     }
   } else {
     const body = await req.json()
@@ -69,7 +74,7 @@ export async function POST(req: Request) {
       ? ddPrompt(companyName, description || company.description)
       : competitivePrompt(companyName, description || company.description, spaceName, thesis)
 
-  const upstream = await streamResearch(prompt, null, pdfBase64)
+  const upstream = await streamResearch(prompt, null, pdfBase64, deckText)
   const reader = upstream.getReader()
   const encoder = new TextEncoder()
 

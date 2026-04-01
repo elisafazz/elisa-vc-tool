@@ -17,7 +17,7 @@ export async function sendSpaceNewsDigest(space: Space, newsContent: string, toE
     <!DOCTYPE html>
     <html>
     <body style="background:#030712;color:#e2e8f0;font-family:system-ui,sans-serif;padding:32px;max-width:640px;margin:0 auto">
-      <h1 style="color:#f8fafc;font-size:22px;margin-bottom:4px">FTI — ${space.name} Weekly Digest</h1>
+      <h1 style="color:#f8fafc;font-size:22px;margin-bottom:4px">FTI - ${space.name} Weekly Digest</h1>
       <p style="color:#6b7280;font-size:14px;margin-top:0">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
       ${space.thesis ? `<p style="color:#9ca3af;font-size:13px;font-style:italic;border-left:2px solid #374151;padding-left:12px;margin:16px 0">${space.thesis}</p>` : ''}
       <hr style="border:none;border-top:1px solid #1f2937;margin:20px 0">
@@ -25,7 +25,7 @@ export async function sendSpaceNewsDigest(space: Space, newsContent: string, toE
         <p style="margin:8px 0">${htmlBody}</p>
       </div>
       <hr style="border:none;border-top:1px solid #1f2937;margin:20px 0">
-      <p style="color:#4b5563;font-size:12px">FTI Research Tool — weekly space digest</p>
+      <p style="color:#4b5563;font-size:12px">FTI Research Tool - weekly space digest</p>
     </body>
     </html>
   `
@@ -34,7 +34,7 @@ export async function sendSpaceNewsDigest(space: Space, newsContent: string, toE
   await resend.emails.send({
     from: 'FTI Alerts <noreply@elisafazzari.com>',
     to: toEmail,
-    subject: `FTI — ${space.name} Weekly Digest`,
+    subject: `FTI - ${space.name} Weekly Digest`,
     html,
   })
 }
@@ -57,7 +57,7 @@ export async function sendAlertDigest(
     .map(({ space, companies }) => {
       const items = companies.map(c => {
         const link = c.website ? `<a href="${c.website}" style="color:#f59e0b">${c.name}</a>` : c.name
-        const stage = c.stage ? ` — ${c.stage}` : ''
+        const stage = c.stage ? ` - ${c.stage}` : ''
         const desc = c.oneLiner ? `<br><span style="color:#9ca3af;font-size:13px">${c.oneLiner}</span>` : ''
         return `<li style="margin-bottom:8px">${link}${stage}${desc}</li>`
       }).join('')
@@ -72,7 +72,7 @@ export async function sendAlertDigest(
     <!DOCTYPE html>
     <html>
     <body style="background:#030712;color:#e2e8f0;font-family:system-ui,sans-serif;padding:32px;max-width:600px;margin:0 auto">
-      <h1 style="color:#f8fafc;font-size:22px;margin-bottom:4px">FTI — New Companies</h1>
+      <h1 style="color:#f8fafc;font-size:22px;margin-bottom:4px">FTI - New Companies</h1>
       <p style="color:#6b7280;font-size:14px;margin-top:0">${totalNew} new ${totalNew === 1 ? 'company' : 'companies'} sourced today</p>
       <hr style="border:none;border-top:1px solid #1f2937;margin:20px 0">
       ${htmlSections}
@@ -86,7 +86,7 @@ export async function sendAlertDigest(
   await resend.emails.send({
     from: 'FTI Deal Flow <noreply@elisafazzari.com>',
     to,
-    subject: `FTI — ${totalNew} new ${totalNew === 1 ? 'company' : 'companies'} sourced`,
+    subject: `FTI - ${totalNew} new ${totalNew === 1 ? 'company' : 'companies'} sourced`,
     html,
   })
 }

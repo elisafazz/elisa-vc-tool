@@ -8,24 +8,36 @@ export const anthropic = new Anthropic({
 type MessageParam = Anthropic.Messages.MessageParam
 type ContentBlockParam = Anthropic.Messages.ContentBlockParam
 
-function buildUserContent(prompt: string, pdfPath?: string | null, pdfBase64?: string | null): ContentBlockParam[] {
+function buildUserContent(
+  prompt: string,
+  pdfPath?: string | null,
+  pdfBase64?: string | null,
+  deckText?: string | null
+): ContentBlockParam[] {
   const blocks: ContentBlockParam[] = []
 
-  if (pdfBase64) {
+  if (deckText) {
+    blocks.push({ type: 'text', text: `Pitch deck content:\n\n${deckText}` })
+  } else if (pdfBase64) {
     blocks.push({
       type: 'document',
       source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 },
     } as ContentBlockParam)
   } else if (pdfPath) {
     try {
-      const pdfBytes = fs.readFileSync(pdfPath)
-      const base64 = pdfBytes.toString('base64')
-      blocks.push({
-        type: 'document',
-        source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-      } as ContentBlockParam)
+      if (pdfPath.endsWith('.txt')) {
+        const txtContent = fs.readFileSync(pdfPath, 'utf-8')
+        blocks.push({ type: 'text', text: `Pitch deck content:\n\n${txtContent}` })
+      } else {
+        const pdfBytes = fs.readFileSync(pdfPath)
+        const base64 = pdfBytes.toString('base64')
+        blocks.push({
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+        } as ContentBlockParam)
+      }
     } catch {
-      // PDF unavailable — continue without it
+      // file unavailable - continue without it
     }
   }
 
@@ -37,10 +49,11 @@ function buildUserContent(prompt: string, pdfPath?: string | null, pdfBase64?: s
 export async function streamResearch(
   prompt: string,
   pdfPath?: string | null,
-  pdfBase64?: string | null
+  pdfBase64?: string | null,
+  deckText?: string | null
 ): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder()
-  const content = buildUserContent(prompt, pdfPath, pdfBase64)
+  const content = buildUserContent(prompt, pdfPath, pdfBase64, deckText)
 
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
@@ -117,7 +130,7 @@ export async function generateRefinedThesis(
     max_tokens: 512,
     messages: [{
       role: 'user',
-      content: `Based on the following context, write a concise investment thesis (2-4 sentences) for this VC deal flow space. The thesis will be used to instruct an AI to source companies — be specific and actionable.
+      content: `Based on the following context, write a concise investment thesis (2-4 sentences) for this VC deal flow space. The thesis will be used to instruct an AI to source companies - be specific and actionable.
 
 Space: ${spaceName}
 ${description ? `Description: ${description}` : ''}

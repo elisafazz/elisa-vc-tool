@@ -36,14 +36,14 @@ export default async function Home() {
         </h1>
         <div className="w-12 h-[3px] bg-gradient-to-r from-red-500 to-red-600 rounded-full mb-6" />
         <p className="text-white/55 text-base leading-relaxed font-light">
-          A VC research tool built for fast, rigorous diligence. Run AI-powered due diligence briefs and full competitive landscape analyses on any company — or use the deal flow tracker to source and monitor companies across investment spaces.
+          A VC research tool built for fast, rigorous diligence. Run AI-powered due diligence briefs and full competitive landscape analyses on any company - or use the deal flow tracker to source and monitor companies across investment spaces.
         </p>
         <p className="text-white/35 text-sm leading-relaxed mt-3 font-light">
           All research is powered by Claude with live web search, PubMed, ClinicalTrials.gov, Crunchbase, and regulatory databases. Upload a pitch deck PDF and Claude extracts context before searching.
         </p>
       </div>
 
-      {/* Function 1 — Diligence */}
+      {/* Function 1 - Diligence */}
       <div className="px-8 mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
         <div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-950/40 via-red-900/10 to-transparent overflow-hidden">
           <div className="p-8">
@@ -59,7 +59,7 @@ export default async function Home() {
                 </div>
 
                 <p className="text-white/60 text-sm leading-relaxed mb-6">
-                  Instant research on any company. Type a name, add optional context, and choose your output — no tracking setup required. Results stream in real time.
+                  Instant research on any company. Type a name, add optional context, and choose your output - no tracking setup required. Results stream in real time.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -81,8 +81,8 @@ export default async function Home() {
                   <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">How to use</p>
                   <ol className="space-y-2 text-sm text-white/50 leading-relaxed">
                     <li><span className="text-white/70 font-medium">1.</span> Enter the company name.</li>
-                    <li><span className="text-white/70 font-medium">2.</span> Add a description — the more context you give (technology, indication, approach, stage), the more targeted the research. Example: <span className="text-white/35 italic">"stem cell-derived beta cell replacement for Type 1 Diabetes, preclinical stage"</span>.</li>
-                    <li><span className="text-white/70 font-medium">3.</span> Optionally upload a pitch deck PDF — Claude reads it before running web searches.</li>
+                    <li><span className="text-white/70 font-medium">2.</span> Add a description - the more context you give (technology, indication, approach, stage), the more targeted the research. Example: <span className="text-white/35 italic">"stem cell-derived beta cell replacement for Type 1 Diabetes, preclinical stage"</span>.</li>
+                    <li><span className="text-white/70 font-medium">3.</span> Optionally upload a pitch deck PDF - Claude reads it before running web searches.</li>
                     <li><span className="text-white/70 font-medium">4.</span> Click DD at a Glance or Competitive Landscape. Research streams in within 30–60 seconds.</li>
                   </ol>
                 </div>
@@ -102,7 +102,7 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Function 2 — Deal Flow */}
+      {/* Function 2 - Deal Flow */}
       <div className="px-8 mb-8 animate-fade-up" style={{ animationDelay: '0.18s' }}>
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent overflow-hidden">
           <div className="p-8">
@@ -131,7 +131,7 @@ export default async function Home() {
               <div>
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Spaces</p>
                 <p className="text-white/35 text-sm leading-relaxed">
-                  Create an investment space with a name and thesis (e.g., "T1D Cell Therapy — companies developing cell replacement therapies for Type 1 Diabetes"). Spaces organize your deal flow by sector or theme.
+                  Create an investment space with a name and thesis (e.g., "T1D Cell Therapy - companies developing cell replacement therapies for Type 1 Diabetes"). Spaces organize your deal flow by sector or theme.
                 </p>
               </div>
               <div>
@@ -143,7 +143,7 @@ export default async function Home() {
               <div>
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Company Profiles</p>
                 <p className="text-white/35 text-sm leading-relaxed">
-                  Each company has a full profile page with status tracking (Sourced → Reviewing → Tracking → Passed), a description field, pitch deck upload, and the full Diligence panel — DD at a Glance and Competitive Landscape — directly embedded.
+                  Each company has a full profile page with status tracking (Sourced → Reviewing → Tracking → Passed), a description field, pitch deck upload, and the full Diligence panel - DD at a Glance and Competitive Landscape - directly embedded.
                 </p>
               </div>
             </div>

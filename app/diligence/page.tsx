@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 
 type ResearchType = 'dd' | 'competitive'
 
-// Simple markdown renderer — converts Claude's markdown output to HTML
+// Simple markdown renderer - converts Claude's markdown output to HTML
 function renderMarkdown(text: string): string {
   return text
     // Headers
@@ -31,7 +31,7 @@ function renderMarkdown(text: string): string {
     .replace(/\*\(([^)]+)\)\*/g, '<span class="text-white/40 text-xs italic">($1)</span>')
     // Horizontal rules
     .replace(/^---$/gm, '<hr class="border-white/10 my-4" />')
-    // Paragraphs — wrap lines that aren't already wrapped
+    // Paragraphs - wrap lines that aren't already wrapped
     .replace(/\n{2,}/g, '\n\n')
 }
 
@@ -60,10 +60,25 @@ function DiligenceInner() {
     if (name) lookup(name)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const PDF_SIZE_LIMIT = 3 * 1024 * 1024  // 3 MB - base64 inflates 33%, stays under Vercel 4.5 MB limit
+  const TXT_SIZE_LIMIT = 1 * 1024 * 1024  // 1 MB - more than enough for any extracted deck text
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.type !== 'application/pdf') { setError('Only PDF files are accepted'); return }
+    const isPdf = file.type === 'application/pdf'
+    const isTxt = file.type === 'text/plain' || file.name.endsWith('.txt')
+    if (!isPdf && !isTxt) { setError('Only PDF or .txt files are accepted'); return }
+    if (isPdf && file.size > PDF_SIZE_LIMIT) {
+      setError(`PDF is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 3 MB. For larger decks, paste into Claude and ask it to extract text, then save as .txt and upload that.`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    if (isTxt && file.size > TXT_SIZE_LIMIT) {
+      setError(`Text file is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 1 MB.`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
     setPdfFile(file)
     setError(null)
   }
@@ -119,7 +134,15 @@ function DiligenceInner() {
         signal: abortRef.current.signal,
       })
 
-      if (!res.ok || !res.body) { setError('Research request failed'); setStreaming(false); return }
+      if (!res.ok || !res.body) {
+        let msg = `Research request failed (${res.status})`
+        if (res.status === 413) msg = 'File too large for upload. Max 3 MB for PDF, 1 MB for .txt.'
+        else if (res.status === 504) msg = 'Request timed out. Try without the PDF or with a smaller file.'
+        else { try { const j = await res.clone().json(); if (j.error) msg = j.error } catch {} }
+        setError(msg)
+        setStreaming(false)
+        return
+      }
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -205,7 +228,7 @@ function DiligenceInner() {
               pdfFile ? 'border-red-500/40 bg-red-500/8' : 'border-white/15 bg-white/[0.02] hover:border-red-500/30 hover:bg-red-500/5'
             }`}
           >
-            <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" accept=".txt,text/plain,application/pdf" className="hidden" onChange={handleFileChange} />
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
               pdfFile ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5 border border-white/10 group-hover:bg-red-500/10 group-hover:border-red-500/20'
             }`}>
@@ -221,14 +244,14 @@ function DiligenceInner() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-red-400 text-sm font-medium truncate">{pdfFile.name}</p>
-                    <p className="text-white/35 text-xs mt-0.5">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB — Claude reads this before searching</p>
+                    <p className="text-white/35 text-xs mt-0.5">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB - Claude reads this before web searching</p>
                   </div>
                   <button onClick={e => { e.stopPropagation(); removePdf() }} className="text-white/30 hover:text-white/60 transition-colors text-xs">Remove</button>
                 </div>
               ) : (
                 <div>
-                  <p className="text-white/50 text-sm font-medium group-hover:text-white/70 transition-colors">Upload pitch deck PDF</p>
-                  <p className="text-white/25 text-xs mt-0.5">Claude reads the deck before web searches — improves context and accuracy</p>
+                  <p className="text-white/50 text-sm font-medium group-hover:text-white/70 transition-colors">Upload pitch deck (.txt or PDF)</p>
+                  <p className="text-white/25 text-xs mt-0.5">For large PDFs: paste into Claude, ask it to extract text, save as .txt. Max 3 MB PDF / 1 MB .txt.</p>
                 </div>
               )}
             </div>
@@ -241,7 +264,7 @@ function DiligenceInner() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               <p className="text-white/60 text-xs">
-                Saved results found for <span className="text-white/80">{companyName}</span> —
+                Saved results found for <span className="text-white/80">{companyName}</span> -
                 {results.dd && ' DD'}{results.dd && results.competitive && ' +'}{results.competitive && ' Competitive'} loaded below. Click Re-run to refresh.
               </p>
             </div>

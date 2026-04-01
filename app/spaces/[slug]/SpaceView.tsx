@@ -153,7 +153,7 @@ export default function SpaceView({ space, initialCompanies }: Props) {
         <div className="flex-shrink-0 mx-6 mt-3 mb-1 rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
           <p className="text-white/60 text-xs font-semibold uppercase tracking-wider">Weekly Email Alerts</p>
           <p className="text-white/35 text-xs leading-relaxed">
-            Every Monday at 8am UTC — new companies, FDA approvals/rejections, funding rounds, partnerships, and company announcements in the <span className="text-white/55">{space.name}</span> space.
+            Every Monday at 8am UTC - new companies, FDA approvals/rejections, funding rounds, partnerships, and company announcements in the <span className="text-white/55">{space.name}</span> space.
           </p>
           <div className="flex items-center gap-3">
             <input

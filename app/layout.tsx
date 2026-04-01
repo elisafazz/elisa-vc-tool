@@ -17,7 +17,7 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'FTI — Deal Flow',
+  title: 'FTI - Deal Flow',
   description: 'VC deal flow and due diligence tool',
 }
 
