@@ -43,8 +43,8 @@ export async function POST(req: Request) {
   if (type !== 'dd' && type !== 'competitive') return new Response('type must be dd or competitive', { status: 400 })
 
   // Find or create standalone company record
-  let company: Company | null = existingCompanyId ? readCompany(existingCompanyId) : null
-  if (!company) company = findCompanyByName(companyName.trim())
+  let company: Company | null = existingCompanyId ? await readCompany(existingCompanyId) : null
+  if (!company) company = await findCompanyByName(companyName.trim())
 
   if (!company) {
     company = {
@@ -61,10 +61,10 @@ export async function POST(req: Request) {
       seenAt: new Date().toISOString(),
       source: 'standalone',
     }
-    writeCompany(company)
+    await writeCompany(company)
   } else if (description.trim() && !company.description) {
     company = { ...company, description: description.trim() }
-    writeCompany(company)
+    await writeCompany(company)
   }
 
   const companyId = company.id
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
       }
 
       if (fullText) {
-        writeResearch({ companyId, type: type as 'dd' | 'competitive', content: fullText, generatedAt: new Date().toISOString() })
+        await writeResearch({ companyId, type: type as 'dd' | 'competitive', content: fullText, generatedAt: new Date().toISOString() })
       }
       controller.enqueue(encoder.encode('data: [DONE]\n\n'))
       controller.close()

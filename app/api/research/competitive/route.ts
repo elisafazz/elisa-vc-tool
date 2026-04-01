@@ -1,15 +1,19 @@
 import { streamResearch } from '@/lib/claude'
 import { competitivePrompt } from '@/lib/prompts'
-import { writeResearch, readCompany, readSpace } from '@/lib/store'
+import { writeResearch, readCompany, readSpace, readDeck } from '@/lib/store'
 
 export async function POST(req: Request) {
   const { companyId, description: descriptionOverride } = await req.json()
   if (!companyId) return new Response('companyId required', { status: 400 })
 
-  const company = readCompany(companyId)
+  const company = await readCompany(companyId)
   if (!company) return new Response('company not found', { status: 404 })
 
-  const space = company.spaceId ? readSpace(company.spaceId) : null
+  const [space, deckText] = await Promise.all([
+    company.spaceId ? readSpace(company.spaceId) : Promise.resolve(null),
+    company.pitchDeckPath ? readDeck(companyId) : Promise.resolve(null),
+  ])
+
   const description = descriptionOverride ?? company.description
 
   const prompt = competitivePrompt(
@@ -21,7 +25,7 @@ export async function POST(req: Request) {
 
   let fullText = ''
 
-  const upstream = await streamResearch(prompt, company.pitchDeckPath)
+  const upstream = await streamResearch(prompt, null, null, deckText)
   const reader = upstream.getReader()
   const encoder = new TextEncoder()
 
@@ -43,7 +47,7 @@ export async function POST(req: Request) {
         controller.enqueue(value)
       }
       if (fullText) {
-        writeResearch({ companyId, type: 'competitive', content: fullText, generatedAt: new Date().toISOString() })
+        await writeResearch({ companyId, type: 'competitive', content: fullText, generatedAt: new Date().toISOString() })
       }
       controller.enqueue(encoder.encode('data: [DONE]\n\n'))
       controller.close()

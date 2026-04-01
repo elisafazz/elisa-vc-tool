@@ -6,11 +6,13 @@ export async function GET(req: Request) {
   const name = searchParams.get('name')
   if (!name) return NextResponse.json(null)
 
-  const company = findCompanyByName(name)
+  const company = await findCompanyByName(name)
   if (!company) return NextResponse.json(null)
 
-  const dd = readResearch(company.id, 'dd')
-  const competitive = readResearch(company.id, 'competitive')
+  const [dd, competitive] = await Promise.all([
+    readResearch(company.id, 'dd'),
+    readResearch(company.id, 'competitive'),
+  ])
 
   return NextResponse.json({
     company,

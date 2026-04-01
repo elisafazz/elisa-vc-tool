@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { listSpaces, writeSpace } from '@/lib/store'
+import { listSpaces, writeSpace, readSpace } from '@/lib/store'
 import type { Space } from '@/lib/types'
 import { randomUUID } from 'crypto'
 
 export async function GET() {
-  const spaces = listSpaces().sort(
+  const spaces = (await listSpaces()).sort(
     (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
   )
   return NextResponse.json(spaces)
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     lastAlertAt: null,
   }
 
-  writeSpace(space)
+  await writeSpace(space)
   return NextResponse.json(space, { status: 201 })
 }
 
@@ -39,11 +39,10 @@ export async function PATCH(req: Request) {
   const { id, ...updates } = body
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  const { readSpace } = await import('@/lib/store')
-  const existing = readSpace(id)
+  const existing = await readSpace(id)
   if (!existing) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
   const updated: Space = { ...existing, ...updates }
-  writeSpace(updated)
+  await writeSpace(updated)
   return NextResponse.json(updated)
 }

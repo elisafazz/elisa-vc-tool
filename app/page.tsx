@@ -5,26 +5,31 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const spaces = listSpaces().sort(
+  const spaces = (await listSpaces()).sort(
     (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
   )
 
-  const spaceStats = spaces.map(space => {
-    const companies = listCompanies(space.id)
-    const unseenCount = companies.filter(c => !c.seenAt).length
-    return { space, unseenCount, totalCount: companies.length }
-  })
+  const spaceStats = await Promise.all(
+    spaces.map(async space => {
+      const companies = await listCompanies(space.id)
+      const unseenCount = companies.filter(c => !c.seenAt).length
+      return { space, unseenCount, totalCount: companies.length }
+    })
+  )
 
   const totalUnseen = spaceStats.reduce((sum, s) => sum + s.unseenCount, 0)
 
-  const standaloneCompanies = listStandaloneCompanies()
+  const standaloneRaw = (await listStandaloneCompanies())
     .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
     .slice(0, 12)
-    .map(c => ({
+
+  const standaloneCompanies = await Promise.all(
+    standaloneRaw.map(async c => ({
       company: c,
-      dd: readResearch(c.id, 'dd'),
-      competitive: readResearch(c.id, 'competitive'),
+      dd: await readResearch(c.id, 'dd'),
+      competitive: await readResearch(c.id, 'competitive'),
     }))
+  )
 
   return (
     <main className="min-h-screen bg-gray-950 pb-24">
@@ -83,7 +88,7 @@ export default async function Home() {
                     <li><span className="text-white/70 font-medium">1.</span> Enter the company name.</li>
                     <li><span className="text-white/70 font-medium">2.</span> Add a description - the more context you give (technology, indication, approach, stage), the more targeted the research. Example: <span className="text-white/35 italic">"stem cell-derived beta cell replacement for Type 1 Diabetes, preclinical stage"</span>.</li>
                     <li><span className="text-white/70 font-medium">3.</span> Optionally upload a pitch deck PDF - Claude reads it before running web searches.</li>
-                    <li><span className="text-white/70 font-medium">4.</span> Click DD at a Glance or Competitive Landscape. Research streams in within 30–60 seconds.</li>
+                    <li><span className="text-white/70 font-medium">4.</span> Click DD at a Glance or Competitive Landscape. Research streams in within 30-60 seconds.</li>
                   </ol>
                 </div>
               </div>
@@ -124,7 +129,7 @@ export default async function Home() {
             </div>
 
             <p className="text-white/60 text-sm leading-relaxed mb-6">
-              Track companies across investment spaces. Source new companies with AI, add companies manually, manage their status, and run full diligence directly from a company's profile.
+              Track companies across investment spaces. Source new companies with AI, add companies manually, manage their status, and run full diligence directly from a company profile.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
@@ -143,7 +148,7 @@ export default async function Home() {
               <div>
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Company Profiles</p>
                 <p className="text-white/35 text-sm leading-relaxed">
-                  Each company has a full profile page with status tracking (Sourced → Reviewing → Tracking → Passed), a description field, pitch deck upload, and the full Diligence panel - DD at a Glance and Competitive Landscape - directly embedded.
+                  Each company has a full profile page with status tracking (Sourced to Reviewing to Tracking to Passed), a description field, pitch deck upload, and the full Diligence panel - DD at a Glance and Competitive Landscape - directly embedded.
                 </p>
               </div>
             </div>

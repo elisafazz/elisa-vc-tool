@@ -9,16 +9,15 @@ export async function POST(req: Request) {
   const { spaceId } = await req.json()
   if (!spaceId) return NextResponse.json({ error: 'spaceId required' }, { status: 400 })
 
-  const space = readSpace(spaceId)
+  const space = await readSpace(spaceId)
   if (!space) return NextResponse.json({ error: 'space not found' }, { status: 404 })
 
-  const existing = listCompanies(spaceId)
+  const existing = await listCompanies(spaceId)
   const existingNames = existing.map(c => c.name.toLowerCase())
 
   const prompt = sourcingPrompt(space.name, space.thesis, existing.map(c => c.name))
   const raw = await runResearch(prompt)
 
-  // Extract JSON array from response
   const jsonMatch = raw.match(/\[[\s\S]*\]/)
   if (!jsonMatch) {
     return NextResponse.json({ error: 'no structured response from AI', raw }, { status: 500 })
@@ -50,12 +49,11 @@ export async function POST(req: Request) {
       seenAt: null,
       source: 'sourced',
     }
-    writeCompany(company)
+    await writeCompany(company)
     newCompanies.push(company)
   }
 
-  // Update space lastSourcedAt
-  writeSpace({ ...space, lastSourcedAt: new Date().toISOString() })
+  await writeSpace({ ...space, lastSourcedAt: new Date().toISOString() })
 
   return NextResponse.json({ added: newCompanies.length, companies: newCompanies })
 }

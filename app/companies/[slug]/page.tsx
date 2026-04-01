@@ -8,17 +8,19 @@ export const dynamic = 'force-dynamic'
 
 export default async function CompanyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const company = readCompany(slug)
+  const company = await readCompany(slug)
   if (!company) notFound()
 
   // Mark as seen on server
   if (!company.seenAt) {
-    writeCompany({ ...company, seenAt: new Date().toISOString() })
+    await writeCompany({ ...company, seenAt: new Date().toISOString() })
   }
 
-  const space = company.spaceId ? readSpace(company.spaceId) : null
-  const ddResearch = readResearch(company.id, 'dd')
-  const competitiveResearch = readResearch(company.id, 'competitive')
+  const [space, ddResearch, competitiveResearch] = await Promise.all([
+    company.spaceId ? readSpace(company.spaceId) : Promise.resolve(null),
+    readResearch(company.id, 'dd'),
+    readResearch(company.id, 'competitive'),
+  ])
 
   return (
     <main className="h-screen flex flex-col bg-gray-950">

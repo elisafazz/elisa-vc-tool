@@ -1,121 +1,100 @@
-import fs from 'fs'
-import path from 'path'
+import { kv } from '@vercel/kv'
 import type { Space, Company, Research, AlertLogEntry } from './types'
 
-function dataDir(): string {
-  return process.env.DATA_DIR ?? '/tmp/fti-data'
-}
-
-function resolve(...parts: string[]): string {
-  return path.join(dataDir(), ...parts)
-}
-
-function ensureDir(dir: string) {
-  try {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  } catch {}
-}
-
-function readJSON<T>(filePath: string): T | null {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
-  } catch {
-    return null
-  }
-}
-
-function writeJSON(filePath: string, data: unknown) {
-  ensureDir(path.dirname(filePath))
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8')
-}
+// All keys prefixed with fti: to avoid collisions with other apps on the same Redis instance
+const P = 'fti'
 
 // --- Spaces ---
 
-export function listSpaces(): Space[] {
-  try {
-    const dir = resolve('spaces')
-    ensureDir(dir)
-    return fs.readdirSync(dir)
-      .filter(f => f.endsWith('.json'))
-      .map(f => readJSON<Space>(path.join(dir, f)))
-      .filter(Boolean) as Space[]
-  } catch {
-    return []
-  }
+export async function listSpaces(): Promise<Space[]> {
+  const ids = await kv.smembers<string[]>(`${P}:idx:spaces`)
+  if (!ids.length) return []
+  const spaces = await Promise.all(ids.map(id => kv.get<Space>(`${P}:space:${id}`)))
+  return (spaces.filter(Boolean) as Space[])
 }
 
-export function readSpace(id: string): Space | null {
-  return readJSON<Space>(resolve('spaces', `${id}.json`))
+export async function readSpace(id: string): Promise<Space | null> {
+  return kv.get<Space>(`${P}:space:${id}`)
 }
 
-export function writeSpace(space: Space) {
-  writeJSON(resolve('spaces', `${space.id}.json`), space)
+export async function writeSpace(space: Space): Promise<void> {
+  await Promise.all([
+    kv.set(`${P}:space:${space.id}`, space),
+    kv.sadd(`${P}:idx:spaces`, space.id),
+  ])
 }
 
 // --- Companies ---
 
-export function listCompanies(spaceId?: string): Company[] {
-  try {
-    const dir = resolve('companies')
-    ensureDir(dir)
-    const all = fs.readdirSync(dir)
-      .filter(f => f.endsWith('.json'))
-      .map(f => readJSON<Company>(path.join(dir, f)))
-      .filter(Boolean) as Company[]
-    return spaceId ? all.filter(c => c.spaceId === spaceId) : all
-  } catch {
-    return []
+export async function listCompanies(spaceId?: string): Promise<Company[]> {
+  const idKey = spaceId ? `${P}:idx:space:${spaceId}:companies` : `${P}:idx:companies`
+  const ids = await kv.smembers<string[]>(idKey)
+  if (!ids.length) return []
+  const companies = await Promise.all(ids.map(id => kv.get<Company>(`${P}:company:${id}`)))
+  return (companies.filter(Boolean) as Company[])
+}
+
+export async function listStandaloneCompanies(): Promise<Company[]> {
+  const ids = await kv.smembers<string[]>(`${P}:idx:standalone:companies`)
+  if (!ids.length) return []
+  const companies = await Promise.all(ids.map(id => kv.get<Company>(`${P}:company:${id}`)))
+  return (companies.filter(Boolean) as Company[])
+}
+
+export async function findCompanyByName(name: string): Promise<Company | null> {
+  const ids = await kv.smembers<string[]>(`${P}:idx:companies`)
+  if (!ids.length) return null
+  const companies = await Promise.all(ids.map(id => kv.get<Company>(`${P}:company:${id}`)))
+  return (companies.filter(Boolean) as Company[]).find(
+    c => c.name.toLowerCase() === name.toLowerCase()
+  ) ?? null
+}
+
+export async function readCompany(id: string): Promise<Company | null> {
+  return kv.get<Company>(`${P}:company:${id}`)
+}
+
+export async function writeCompany(company: Company): Promise<void> {
+  const ops: Promise<unknown>[] = [
+    kv.set(`${P}:company:${company.id}`, company),
+    kv.sadd(`${P}:idx:companies`, company.id),
+  ]
+  if (company.spaceId) {
+    ops.push(kv.sadd(`${P}:idx:space:${company.spaceId}:companies`, company.id))
+  } else {
+    ops.push(kv.sadd(`${P}:idx:standalone:companies`, company.id))
   }
-}
-
-export function listStandaloneCompanies(): Company[] {
-  try {
-    const dir = resolve('companies')
-    ensureDir(dir)
-    return fs.readdirSync(dir)
-      .filter(f => f.endsWith('.json'))
-      .map(f => readJSON<Company>(path.join(dir, f)))
-      .filter((c): c is Company => c !== null && c.source === 'standalone')
-  } catch {
-    return []
-  }
-}
-
-export function findCompanyByName(name: string): Company | null {
-  try {
-    const all = listCompanies()
-    return all.find(c => c.name.toLowerCase() === name.toLowerCase()) ?? null
-  } catch {
-    return null
-  }
-}
-
-export function readCompany(id: string): Company | null {
-  return readJSON<Company>(resolve('companies', `${id}.json`))
-}
-
-export function writeCompany(company: Company) {
-  writeJSON(resolve('companies', `${company.id}.json`), company)
+  await Promise.all(ops)
 }
 
 // --- Research ---
 
-export function readResearch(companyId: string, type: 'dd' | 'competitive'): Research | null {
-  return readJSON<Research>(resolve('research', `${companyId}-${type}.json`))
+export async function readResearch(companyId: string, type: 'dd' | 'competitive'): Promise<Research | null> {
+  return kv.get<Research>(`${P}:research:${companyId}:${type}`)
 }
 
-export function writeResearch(research: Research) {
-  writeJSON(resolve('research', `${research.companyId}-${research.type}.json`), research)
+export async function writeResearch(research: Research): Promise<void> {
+  await kv.set(`${P}:research:${research.companyId}:${research.type}`, research)
+}
+
+// --- Deck text (uploaded .txt content, stored in KV for persistence) ---
+
+export async function readDeck(companyId: string): Promise<string | null> {
+  return kv.get<string>(`${P}:deck:${companyId}`)
+}
+
+export async function writeDeck(companyId: string, text: string): Promise<void> {
+  await kv.set(`${P}:deck:${companyId}`, text)
 }
 
 // --- Alerts ---
 
-export function readAlertLog(): AlertLogEntry[] {
-  return readJSON<AlertLogEntry[]>(resolve('alerts', 'log.json')) ?? []
+export async function readAlertLog(): Promise<AlertLogEntry[]> {
+  return (await kv.get<AlertLogEntry[]>(`${P}:alerts:log`)) ?? []
 }
 
-export function appendAlertLog(entry: AlertLogEntry) {
-  const log = readAlertLog()
+export async function appendAlertLog(entry: AlertLogEntry): Promise<void> {
+  const log = await readAlertLog()
   log.unshift(entry)
-  writeJSON(resolve('alerts', 'log.json'), log.slice(0, 200))
+  await kv.set(`${P}:alerts:log`, log.slice(0, 200))
 }

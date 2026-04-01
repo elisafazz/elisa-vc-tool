@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     source: 'manual',
   }
 
-  writeCompany(company)
+  await writeCompany(company)
   return NextResponse.json(company, { status: 201 })
 }
 
@@ -36,10 +36,10 @@ export async function PATCH(req: Request) {
 
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  const existing = readCompany(id)
+  const existing = await readCompany(id)
   if (!existing) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
   const updated: Company = { ...existing, ...updates }
-  writeCompany(updated)
+  await writeCompany(updated)
   return NextResponse.json(updated)
 }

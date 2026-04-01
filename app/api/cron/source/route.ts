@@ -7,18 +7,17 @@ import type { Company } from '@/lib/types'
 import { randomUUID } from 'crypto'
 
 export async function POST(req: Request) {
-  // Verify cron secret
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  const spaces = listSpaces()
+  const spaces = await listSpaces()
   const results: Array<{ space: string; added: number }> = []
   const digestInput: Array<{ space: (typeof spaces)[0]; companies: Company[] }> = []
 
   for (const space of spaces) {
-    const existing = listCompanies(space.id)
+    const existing = await listCompanies(space.id)
     const prompt = sourcingPrompt(space.name, space.thesis, existing.map(c => c.name))
 
     try {
@@ -46,16 +45,16 @@ export async function POST(req: Request) {
           seenAt: null,
           source: 'sourced',
         }
-        writeCompany(company)
+        await writeCompany(company)
         newCompanies.push(company)
       }
 
-      writeSpace({ ...space, lastSourcedAt: new Date().toISOString() })
+      await writeSpace({ ...space, lastSourcedAt: new Date().toISOString() })
       results.push({ space: space.name, added: newCompanies.length })
 
       if (newCompanies.length > 0) {
         digestInput.push({ space, companies: newCompanies })
-        appendAlertLog({
+        await appendAlertLog({
           spaceId: space.id,
           spaceName: space.name,
           companyIds: newCompanies.map(c => c.id),
@@ -68,7 +67,6 @@ export async function POST(req: Request) {
     }
   }
 
-  // Send email digest
   let emailSent = false
   if (digestInput.length > 0) {
     try {
