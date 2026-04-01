@@ -3,6 +3,63 @@
 import { useState, useRef } from 'react'
 import type { Company } from '@/lib/types'
 
+const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary.`
+
+function DeckUploadPanel({
+  fileInputRef,
+  deckName,
+  uploading,
+  uploadError,
+  onFileChange,
+}: {
+  fileInputRef: React.RefObject<HTMLInputElement | null>
+  deckName: string | null
+  uploading: boolean
+  uploadError: string | null
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  function copyPrompt() {
+    navigator.clipboard.writeText(EXTRACT_PROMPT)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 space-y-2">
+        <p className="text-white/45 text-xs leading-relaxed">
+          Go to <span className="text-white/70">claude.ai</span>, upload your PDF, and enter this prompt:
+        </p>
+        <div className="flex items-start gap-2 rounded-md bg-white/5 border border-white/8 px-3 py-2">
+          <p className="flex-1 text-white/50 text-xs leading-relaxed font-mono">{EXTRACT_PROMPT}</p>
+          <button
+            onClick={copyPrompt}
+            className="flex-shrink-0 text-xs px-2.5 py-1 rounded-full border transition-colors mt-0.5 font-medium"
+            style={copied ? { borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(248,113,113)', background: 'rgba(239,68,68,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <p className="text-white/30 text-xs">Save the response as a .txt file, then upload below.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={onFileChange} />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+        >
+          {uploading ? 'Uploading...' : deckName ? 'Replace .txt' : 'Upload .txt'}
+        </button>
+        {deckName && <span className="text-xs text-white/40 truncate max-w-[200px]">{deckName}</span>}
+        {uploadError && <span className="text-xs text-red-400">{uploadError}</span>}
+      </div>
+    </div>
+  )
+}
+
 interface Props {
   company: Company
   savedDD: string | null
@@ -190,28 +247,13 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
           rows={3}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/25 resize-none focus:outline-none focus:border-red-500/40"
         />
-        <div className="flex items-center gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".txt,text/plain"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
-          >
-            {uploading ? 'Uploading...' : 'Upload Deck Context (.txt)'}
-          </button>
-          {deckName && (
-            <span className="text-xs text-white/40 truncate max-w-[200px]">{deckName}</span>
-          )}
-          {uploadError && (
-            <span className="text-xs text-red-400">{uploadError}</span>
-          )}
-        </div>
+        <DeckUploadPanel
+          fileInputRef={fileInputRef}
+          deckName={deckName}
+          uploading={uploading}
+          uploadError={uploadError}
+          onFileChange={handleFileChange}
+        />
       </div>
 
       {/* Tab bar */}

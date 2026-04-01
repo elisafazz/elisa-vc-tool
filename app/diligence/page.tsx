@@ -35,6 +35,88 @@ function renderMarkdown(text: string): string {
     .replace(/\n{2,}/g, '\n\n')
 }
 
+const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary.`
+
+function DeckUploadSection({
+  pdfFile,
+  fileInputRef,
+  onFileChange,
+  onRemove,
+}: {
+  pdfFile: File | null
+  fileInputRef: React.RefObject<HTMLInputElement | null>
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onRemove: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  function copyPrompt() {
+    navigator.clipboard.writeText(EXTRACT_PROMPT)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Step-by-step instruction */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] px-5 py-4 space-y-3">
+        <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Pitch Deck Context</p>
+        <p className="text-white/55 text-sm leading-relaxed">
+          This tool requires you to extract the text from your pitch deck before uploading.
+          Go to <span className="text-white/80">claude.ai</span>, start a new conversation, upload your PDF, and enter this prompt:
+        </p>
+        <div className="flex items-start gap-3 rounded-lg bg-white/5 border border-white/10 px-4 py-3">
+          <p className="flex-1 text-white/60 text-xs leading-relaxed font-mono">{EXTRACT_PROMPT}</p>
+          <button
+            onClick={copyPrompt}
+            className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors mt-0.5 font-medium"
+            style={copied ? { borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(248,113,113)', background: 'rgba(239,68,68,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.45)' }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <p className="text-white/35 text-xs">Save Claude&apos;s response as a <span className="text-white/55">.txt file</span>, then upload it below.</p>
+      </div>
+
+      {/* Upload zone */}
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative flex items-center gap-4 rounded-xl border-2 border-dashed px-5 py-4 cursor-pointer transition-all group ${
+          pdfFile ? 'border-red-500/40 bg-red-500/8' : 'border-white/15 bg-white/[0.02] hover:border-red-500/30 hover:bg-red-500/5'
+        }`}
+      >
+        <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={onFileChange} />
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+          pdfFile ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5 border border-white/10 group-hover:bg-red-500/10 group-hover:border-red-500/20'
+        }`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+            className={pdfFile ? 'text-red-400' : 'text-white/35 group-hover:text-red-400 transition-colors'}>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          {pdfFile ? (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-red-400 text-sm font-medium truncate">{pdfFile.name}</p>
+                <p className="text-white/35 text-xs mt-0.5">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB - will be read before web searching</p>
+              </div>
+              <button onClick={e => { e.stopPropagation(); onRemove() }} className="text-white/30 hover:text-white/60 transition-colors text-xs">Remove</button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-white/50 text-sm font-medium group-hover:text-white/70 transition-colors">Upload extracted text (.txt)</p>
+              <p className="text-white/25 text-xs mt-0.5">Click to select your .txt file</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DiligencePage() {
   return <Suspense><DiligenceInner /></Suspense>
 }
@@ -214,41 +296,8 @@ function DiligenceInner() {
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/80 placeholder-white/25 text-sm resize-none focus:outline-none focus:border-red-500/40"
           />
 
-          {/* PDF upload */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative flex items-center gap-4 rounded-xl border-2 border-dashed px-5 py-4 cursor-pointer transition-all group ${
-              pdfFile ? 'border-red-500/40 bg-red-500/8' : 'border-white/15 bg-white/[0.02] hover:border-red-500/30 hover:bg-red-500/5'
-            }`}
-          >
-            <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={handleFileChange} />
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-              pdfFile ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5 border border-white/10 group-hover:bg-red-500/10 group-hover:border-red-500/20'
-            }`}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                className={pdfFile ? 'text-red-400' : 'text-white/35 group-hover:text-red-400 transition-colors'}>
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              {pdfFile ? (
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-red-400 text-sm font-medium truncate">{pdfFile.name}</p>
-                    <p className="text-white/35 text-xs mt-0.5">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB - will be read before web searching</p>
-                  </div>
-                  <button onClick={e => { e.stopPropagation(); removePdf() }} className="text-white/30 hover:text-white/60 transition-colors text-xs">Remove</button>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-white/50 text-sm font-medium group-hover:text-white/70 transition-colors">Upload pitch deck context (.txt)</p>
-                  <p className="text-white/25 text-xs mt-0.5 leading-relaxed">Open the PDF in Claude and send: "Extract all text from this pitch deck and output as plain text, describing any charts or tables." Save the response as a .txt file and upload here.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Pitch deck instructions + upload */}
+          <DeckUploadSection pdfFile={pdfFile} fileInputRef={fileInputRef} onFileChange={handleFileChange} onRemove={removePdf} />
 
           {/* Saved results notice */}
           {looked && companyId && (results.dd || results.competitive) && (
