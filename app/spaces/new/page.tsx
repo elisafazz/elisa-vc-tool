@@ -74,10 +74,14 @@ export default function NewSpacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description, thesis, alertsEnabled, alertEmail: alertsEnabled ? alertEmail : null }),
       })
-      if (!res.ok) throw new Error('Failed to create space')
-      router.push('/')
-    } catch {
-      setError('Failed to create space.')
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error ?? `Error ${res.status}`)
+      }
+      const space = await res.json()
+      router.push(`/spaces/${space.id}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create space.')
       setLoading(false)
     }
   }
