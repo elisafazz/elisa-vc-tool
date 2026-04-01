@@ -52,8 +52,8 @@ export default function SpaceCard({ space, unseenCount, totalCount, index }: Pro
         )}
         <div className="mt-4 flex items-center justify-between">
           <span className="text-white/30 text-xs font-medium group-hover:text-white/60 transition-colors">Open space</span>
-          <div className="w-7 h-7 rounded-full bg-white/5 border border-white/8 flex items-center justify-center group-hover:bg-amber-400/15 group-hover:border-amber-400/25 transition-all">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/40 group-hover:text-amber-400 group-hover:translate-x-px transition-all">
+          <div className="w-7 h-7 rounded-full bg-white/5 border border-white/8 flex items-center justify-center group-hover:bg-red-500/15 group-hover:border-red-500/25 transition-all">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/40 group-hover:text-red-500 group-hover:translate-x-px transition-all">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </div>

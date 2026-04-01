@@ -88,7 +88,7 @@ function StreamingReport({
         <button
           onClick={run}
           disabled={streaming}
-          className="px-4 py-1.5 rounded-full text-xs font-medium transition-colors bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-1.5 rounded-full text-xs font-medium transition-colors bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {streaming ? 'Running...' : isEmpty ? 'Run' : 'Re-run'}
         </button>
@@ -104,7 +104,7 @@ function StreamingReport({
             <p className="text-white/25 text-sm">No research yet.</p>
             <button
               onClick={run}
-              className="px-5 py-2 rounded-full text-sm font-medium bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 transition-colors"
+              className="px-5 py-2 rounded-full text-sm font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors"
             >
               Run {label}
             </button>
@@ -115,7 +115,7 @@ function StreamingReport({
           <div className="prose prose-sm prose-invert max-w-none">
             <pre className="whitespace-pre-wrap text-white/75 text-sm leading-relaxed font-sans">
               {content}
-              {streaming && <span className="cursor-blink text-amber-400 ml-0.5">|</span>}
+              {streaming && <span className="cursor-blink text-red-500 ml-0.5">|</span>}
             </pre>
           </div>
         )}
@@ -179,7 +179,7 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
           onBlur={saveDescription}
           placeholder="Describe what this company does — technology, indication, approach, stage..."
           rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/25 resize-none focus:outline-none focus:border-amber-400/40"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/25 resize-none focus:outline-none focus:border-red-500/40"
         />
         <div className="flex items-center gap-3">
           <input
@@ -213,7 +213,7 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
             onClick={() => setTab(t)}
             className={`py-3 px-1 mr-6 text-sm font-medium border-b-2 transition-colors ${
               tab === t
-                ? 'border-amber-400 text-white'
+                ? 'border-red-500 text-white'
                 : 'border-transparent text-white/40 hover:text-white/60'
             }`}
           >

@@ -1,7 +1,7 @@
 import type { CompanyStatus } from '@/lib/types'
 
 const BADGE: Record<CompanyStatus, string> = {
-  Sourced:   'bg-amber-400/15 text-amber-200 border border-amber-400/20',
+  Sourced:   'bg-red-500/15 text-amber-200 border border-red-500/20',
   Reviewing: 'bg-blue-400/20 text-blue-100 border border-blue-300/20',
   Tracking:  'bg-green-400/20 text-green-100 border border-green-300/20',
   Passed:    'bg-white/10 text-white/50 border border-white/15',

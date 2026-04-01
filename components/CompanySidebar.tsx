@@ -5,7 +5,7 @@ import StatusBadge from './StatusBadge'
 import AlertBadge from './AlertBadge'
 
 const STATUS_BORDER: Record<CompanyStatus, string> = {
-  Sourced:   'border-l-amber-400',
+  Sourced:   'border-l-red-500',
   Reviewing: 'border-l-blue-400',
   Tracking:  'border-l-green-400',
   Passed:    'border-l-gray-600',
@@ -35,7 +35,7 @@ export default function CompanySidebar({ companies, selectedId, onSelect, filter
             onClick={() => onFilterChange(s)}
             className={`text-[11px] px-2.5 py-1 rounded-full transition-colors ${
               filterStatus === s
-                ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                 : 'text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20'
             }`}
           >
@@ -68,7 +68,7 @@ export default function CompanySidebar({ companies, selectedId, onSelect, filter
               onClick={() => onSelect(company)}
               className={`w-full text-left px-4 py-3 border-b border-white/5 border-l-2 transition-colors flex items-start gap-3 ${
                 isSelected
-                  ? 'bg-white/10 border-l-amber-400'
+                  ? 'bg-white/10 border-l-red-500'
                   : `${borderClass} hover:bg-white/5`
               }`}
             >
@@ -78,7 +78,7 @@ export default function CompanySidebar({ companies, selectedId, onSelect, filter
                     {company.name}
                   </span>
                   {isNew && (
-                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-red-500" />
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">

@@ -46,7 +46,7 @@ export default function NewSpacePage() {
           <h1 className="font-display text-3xl text-white mb-1" style={{ letterSpacing: '-0.3px' }}>
             New Space
           </h1>
-          <div className="w-8 h-[2px] bg-amber-400 rounded-full mb-8" />
+          <div className="w-8 h-[2px] bg-red-500 rounded-full mb-8" />
 
           <form onSubmit={submit} className="space-y-6">
             <div>
@@ -59,7 +59,7 @@ export default function NewSpacePage() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. AI Infrastructure, Digital Therapeutics"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-amber-400/40 focus:bg-white/8 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 focus:bg-white/8 transition-colors"
               />
             </div>
 
@@ -72,7 +72,7 @@ export default function NewSpacePage() {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Short label shown on the card"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-amber-400/40 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 transition-colors"
               />
             </div>
 
@@ -85,7 +85,7 @@ export default function NewSpacePage() {
                 onChange={e => setThesis(e.target.value)}
                 placeholder="What are you looking for in this space? This guides the AI when sourcing companies."
                 rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-amber-400/40 transition-colors resize-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 transition-colors resize-none"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function NewSpacePage() {
               <button
                 type="submit"
                 disabled={loading || !name.trim()}
-                className="px-6 py-2.5 rounded-full text-sm font-medium bg-amber-400/20 text-amber-300 border border-amber-400/30 hover:bg-amber-400/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2.5 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Creating...' : 'Create Space'}
               </button>

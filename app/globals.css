@@ -27,8 +27,8 @@ body::before {
   inset: 0;
   z-index: 9998;
   pointer-events: none;
-  background: radial-gradient(ellipse at 20% 100%, rgba(251,191,36,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 0%, rgba(251,146,36,0.02) 0%, transparent 40%);
+  background: radial-gradient(ellipse at 20% 100%, rgba(239,68,68,0.05) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 0%, rgba(220,38,38,0.03) 0%, transparent 40%);
 }
 
 /* Display font utility */

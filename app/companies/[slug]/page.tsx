@@ -51,7 +51,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                   href={company.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-400/70 text-xs hover:text-amber-400 transition-colors"
+                  className="text-red-500/70 text-xs hover:text-red-500 transition-colors"
                 >
                   {company.website}
                 </a>

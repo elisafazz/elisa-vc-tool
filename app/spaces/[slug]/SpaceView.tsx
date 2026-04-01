@@ -110,7 +110,7 @@ export default function SpaceView({ space, initialCompanies }: Props) {
           <button
             onClick={handleSource}
             disabled={sourcing}
-            className="px-4 py-1.5 rounded-full text-xs font-medium bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 disabled:opacity-50 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 disabled:opacity-50 transition-colors"
           >
             {sourcing ? 'Sourcing...' : 'Source now'}
           </button>
@@ -126,23 +126,23 @@ export default function SpaceView({ space, initialCompanies }: Props) {
             placeholder="Company name *"
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-amber-400/30 w-48"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-red-500/30 w-48"
           />
           <input
             type="text"
             placeholder="Website"
             value={newWebsite}
             onChange={e => setNewWebsite(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-amber-400/30 w-44"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-red-500/30 w-44"
           />
           <input
             type="text"
             placeholder="Stage"
             value={newStage}
             onChange={e => setNewStage(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-amber-400/30 w-32"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-red-500/30 w-32"
           />
-          <button type="submit" className="px-4 py-1.5 rounded-full text-xs font-medium bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 transition-colors">
+          <button type="submit" className="px-4 py-1.5 rounded-full text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors">
             Add
           </button>
           <button type="button" onClick={() => setAddingCompany(false)} className="text-white/30 text-xs hover:text-white/50 transition-colors">
@@ -180,7 +180,7 @@ export default function SpaceView({ space, initialCompanies }: Props) {
                       href={selected.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-amber-400/70 text-xs hover:text-amber-400 transition-colors mt-2 block"
+                      className="text-red-500/70 text-xs hover:text-red-500 transition-colors mt-2 block"
                     >
                       {selected.website}
                     </a>
@@ -188,7 +188,7 @@ export default function SpaceView({ space, initialCompanies }: Props) {
                 </div>
                 <Link
                   href={`/companies/${selected.id}`}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 transition-colors"
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors"
                 >
                   Full Research
                 </Link>

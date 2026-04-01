@@ -80,7 +80,7 @@ export default function DiligencePage() {
           <h1 className="font-display text-4xl text-white tracking-tight" style={{ letterSpacing: '-0.5px' }}>
             Diligence
           </h1>
-          <div className="w-10 h-[2.5px] bg-gradient-to-r from-amber-400 to-amber-500 rounded-full mt-3" />
+          <div className="w-10 h-[2.5px] bg-gradient-to-r from-red-500 to-red-600 rounded-full mt-3" />
           <p className="text-white/30 mt-3 text-sm font-light tracking-wide">
             Run DD or competitive landscape on any company
           </p>
@@ -95,7 +95,7 @@ export default function DiligencePage() {
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
             placeholder="Company name"
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:border-amber-400/40"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:border-red-500/40"
           />
         </div>
         <textarea
@@ -103,13 +103,13 @@ export default function DiligencePage() {
           onChange={e => setDescription(e.target.value)}
           placeholder="Describe what they do — technology, indication, approach, stage... (optional but improves research quality)"
           rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/80 placeholder-white/25 text-sm resize-none focus:outline-none focus:border-amber-400/40"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/80 placeholder-white/25 text-sm resize-none focus:outline-none focus:border-red-500/40"
         />
         <div className="flex gap-3">
           <button
             onClick={() => run('dd')}
             disabled={streaming || !companyName.trim()}
-            className="px-5 py-2.5 rounded-full text-sm font-medium bg-amber-400/15 text-amber-300 border border-amber-400/25 hover:bg-amber-400/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-full text-sm font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {streaming && activeType === 'dd' ? 'Running...' : 'DD at a Glance'}
           </button>
@@ -148,7 +148,7 @@ export default function DiligencePage() {
             </div>
             <pre className="whitespace-pre-wrap text-white/75 text-sm leading-relaxed font-sans">
               {content}
-              {streaming && <span className="cursor-blink text-amber-400 ml-0.5">|</span>}
+              {streaming && <span className="cursor-blink text-red-500 ml-0.5">|</span>}
             </pre>
           </div>
         )}
