@@ -27,6 +27,7 @@ export default function SpaceView({ space, initialCompanies }: Props) {
   const [alertEmail, setAlertEmail] = useState(space.alertEmail ?? '')
   const [showAlertConfig, setShowAlertConfig] = useState(false)
   const [savingAlert, setSavingAlert] = useState(false)
+  const [alertSaveMsg, setAlertSaveMsg] = useState<string | null>(null)
 
   async function handleSelect(company: Company) {
     setSelected(company)
@@ -66,15 +67,27 @@ export default function SpaceView({ space, initialCompanies }: Props) {
 
   async function saveAlertSettings(enabled: boolean, email: string) {
     setSavingAlert(true)
+    setAlertSaveMsg(null)
     try {
-      await fetch('/api/spaces', {
+      const res = await fetch('/api/spaces', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: space.id, alertsEnabled: enabled, alertEmail: email || null }),
       })
-      setAlertsEnabled(enabled)
-    } catch {}
-    setSavingAlert(false)
+      if (res.ok) {
+        setAlertsEnabled(enabled)
+        setAlertEmail(email)
+        setAlertSaveMsg(enabled ? 'Saved' : 'Disabled')
+        setTimeout(() => setAlertSaveMsg(null), 3000)
+      } else {
+        const j = await res.json().catch(() => ({}))
+        setAlertSaveMsg(`Error: ${j.error ?? res.status}`)
+      }
+    } catch {
+      setAlertSaveMsg('Save failed - check connection')
+    } finally {
+      setSavingAlert(false)
+    }
   }
 
   async function handleAddCompany(e: React.FormEvent) {
@@ -180,9 +193,16 @@ export default function SpaceView({ space, initialCompanies }: Props) {
               </button>
             )}
           </div>
-          {space.lastAlertAt && (
-            <p className="text-white/20 text-xs">Last sent {new Date(space.lastAlertAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-          )}
+          <div className="flex items-center gap-4">
+            {alertSaveMsg && (
+              <p className={`text-xs ${alertSaveMsg.startsWith('Error') || alertSaveMsg.startsWith('Save failed') ? 'text-red-400' : 'text-green-400'}`}>
+                {alertSaveMsg}
+              </p>
+            )}
+            {space.lastAlertAt && (
+              <p className="text-white/20 text-xs">Last sent {new Date(space.lastAlertAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+            )}
+          </div>
         </div>
       )}
 
