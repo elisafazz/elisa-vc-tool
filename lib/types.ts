@@ -12,7 +12,7 @@ export interface Space {
 export interface Company {
   id: string
   name: string
-  spaceId: string
+  spaceId: string | null        // null for standalone diligence companies
   website: string | null
   stage: string | null
   oneLiner: string | null
@@ -21,7 +21,7 @@ export interface Company {
   status: CompanyStatus
   addedAt: string
   seenAt: string | null
-  source: 'manual' | 'sourced'
+  source: 'manual' | 'sourced' | 'standalone'
 }
 
 export interface Research {

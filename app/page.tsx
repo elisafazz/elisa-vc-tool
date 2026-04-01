@@ -1,4 +1,4 @@
-import { listSpaces, listCompanies } from '@/lib/store'
+import { listSpaces, listCompanies, listStandaloneCompanies, readResearch } from '@/lib/store'
 import SpaceCard from '@/components/SpaceCard'
 import Link from 'next/link'
 
@@ -16,6 +16,15 @@ export default async function Home() {
   })
 
   const totalUnseen = spaceStats.reduce((sum, s) => sum + s.unseenCount, 0)
+
+  const standaloneCompanies = listStandaloneCompanies()
+    .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
+    .slice(0, 12)
+    .map(c => ({
+      company: c,
+      dd: readResearch(c.id, 'dd'),
+      competitive: readResearch(c.id, 'competitive'),
+    }))
 
   return (
     <main className="min-h-screen bg-gray-950 pb-24">
@@ -180,6 +189,41 @@ export default async function Home() {
                 totalCount={totalCount}
                 index={i}
               />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Research */}
+      {standaloneCompanies.length > 0 && (
+        <div className="px-8 mt-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-white/25 text-xs uppercase tracking-widest font-medium">Recent Diligence</p>
+            <Link href="/diligence" className="text-xs text-white/30 hover:text-white/60 transition-colors">+ New</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {standaloneCompanies.map(({ company, dd, competitive }) => (
+              <Link
+                key={company.id}
+                href={`/diligence?name=${encodeURIComponent(company.name)}`}
+                className="group rounded-xl border border-white/8 bg-white/[0.02] hover:bg-white/5 hover:border-white/15 transition-all p-5"
+              >
+                <p className="text-white/85 text-sm font-medium mb-1 group-hover:text-white transition-colors truncate">{company.name}</p>
+                {company.description && (
+                  <p className="text-white/35 text-xs leading-relaxed line-clamp-2 mb-3">{company.description}</p>
+                )}
+                <div className="flex gap-2 flex-wrap">
+                  {dd && (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-500/12 text-red-400 border border-red-500/20">DD</span>
+                  )}
+                  {competitive && (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/8 text-white/45 border border-white/12">Competitive</span>
+                  )}
+                  <span className="text-[10px] text-white/25 ml-auto self-center">
+                    {new Date(company.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>

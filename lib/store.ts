@@ -68,6 +68,28 @@ export function listCompanies(spaceId?: string): Company[] {
   }
 }
 
+export function listStandaloneCompanies(): Company[] {
+  try {
+    const dir = resolve('companies')
+    ensureDir(dir)
+    return fs.readdirSync(dir)
+      .filter(f => f.endsWith('.json'))
+      .map(f => readJSON<Company>(path.join(dir, f)))
+      .filter((c): c is Company => c !== null && c.source === 'standalone')
+  } catch {
+    return []
+  }
+}
+
+export function findCompanyByName(name: string): Company | null {
+  try {
+    const all = listCompanies()
+    return all.find(c => c.name.toLowerCase() === name.toLowerCase()) ?? null
+  } catch {
+    return null
+  }
+}
+
 export function readCompany(id: string): Company | null {
   return readJSON<Company>(resolve('companies', `${id}.json`))
 }

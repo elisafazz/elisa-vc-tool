@@ -1,10 +1,14 @@
+import { NextResponse } from 'next/server'
 import { streamResearch } from '@/lib/claude'
 import { ddPrompt, competitivePrompt } from '@/lib/prompts'
+import { findCompanyByName, writeCompany, writeResearch, readCompany } from '@/lib/store'
+import type { Company } from '@/lib/types'
+import { randomUUID } from 'crypto'
 
-// Standalone research — accepts multipart/form-data so a PDF can be uploaded inline
 export async function POST(req: Request) {
   const contentType = req.headers.get('content-type') ?? ''
   let companyName = '', description = '', type = '', spaceName = '', thesis = ''
+  let existingCompanyId: string | null = null
   let pdfBase64: string | null = null
 
   if (contentType.includes('multipart/form-data')) {
@@ -14,6 +18,7 @@ export async function POST(req: Request) {
     type = (form.get('type') as string) ?? ''
     spaceName = (form.get('spaceName') as string) ?? ''
     thesis = (form.get('thesis') as string) ?? ''
+    existingCompanyId = (form.get('companyId') as string) || null
     const file = form.get('pdf') as File | null
     if (file && file.type === 'application/pdf') {
       const bytes = await file.arrayBuffer()
@@ -26,26 +31,73 @@ export async function POST(req: Request) {
     type = body.type ?? ''
     spaceName = body.spaceName ?? ''
     thesis = body.thesis ?? ''
+    existingCompanyId = body.companyId ?? null
   }
 
   if (!companyName.trim()) return new Response('companyName required', { status: 400 })
   if (type !== 'dd' && type !== 'competitive') return new Response('type must be dd or competitive', { status: 400 })
 
+  // Find or create standalone company record
+  let company: Company | null = existingCompanyId ? readCompany(existingCompanyId) : null
+  if (!company) company = findCompanyByName(companyName.trim())
+
+  if (!company) {
+    company = {
+      id: randomUUID(),
+      name: companyName.trim(),
+      spaceId: null,
+      website: null,
+      stage: null,
+      oneLiner: null,
+      description: description.trim() || null,
+      pitchDeckPath: null,
+      status: 'Sourced',
+      addedAt: new Date().toISOString(),
+      seenAt: new Date().toISOString(),
+      source: 'standalone',
+    }
+    writeCompany(company)
+  } else if (description.trim() && !company.description) {
+    company = { ...company, description: description.trim() }
+    writeCompany(company)
+  }
+
+  const companyId = company.id
+
   const prompt =
     type === 'dd'
-      ? ddPrompt(companyName, description)
-      : competitivePrompt(companyName, description, spaceName, thesis)
+      ? ddPrompt(companyName, description || company.description)
+      : competitivePrompt(companyName, description || company.description, spaceName, thesis)
 
   const upstream = await streamResearch(prompt, null, pdfBase64)
   const reader = upstream.getReader()
   const encoder = new TextEncoder()
 
+  let fullText = ''
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      // Emit companyId as first event so client can track it
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ companyId })}\n\n`))
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
+        const chunk = new TextDecoder().decode(value)
+        const matches = chunk.match(/data: ({.*})/g)
+        if (matches) {
+          for (const m of matches) {
+            try {
+              const parsed = JSON.parse(m.replace('data: ', ''))
+              if (parsed.text) fullText += parsed.text
+            } catch {}
+          }
+        }
         controller.enqueue(value)
+      }
+
+      if (fullText) {
+        writeResearch({ companyId, type: type as 'dd' | 'competitive', content: fullText, generatedAt: new Date().toISOString() })
       }
       controller.enqueue(encoder.encode('data: [DONE]\n\n'))
       controller.close()

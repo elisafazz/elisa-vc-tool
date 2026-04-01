@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const company = readCompany(companyId)
   if (!company) return new Response('company not found', { status: 404 })
 
-  const space = readSpace(company.spaceId)
+  const space = company.spaceId ? readSpace(company.spaceId) : null
   const description = descriptionOverride ?? company.description
 
   const prompt = competitivePrompt(

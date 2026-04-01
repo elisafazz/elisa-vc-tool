@@ -16,7 +16,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
     writeCompany({ ...company, seenAt: new Date().toISOString() })
   }
 
-  const space = readSpace(company.spaceId)
+  const space = company.spaceId ? readSpace(company.spaceId) : null
   const ddResearch = readResearch(company.id, 'dd')
   const competitiveResearch = readResearch(company.id, 'competitive')
 

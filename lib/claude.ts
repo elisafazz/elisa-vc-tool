@@ -76,6 +76,60 @@ export async function streamResearch(
   })
 }
 
+// Generate clarifying questions to refine an investment space thesis
+export async function generateSpaceQuestions(
+  spaceName: string,
+  description: string
+): Promise<string[]> {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: `You are helping a VC analyst set up an investment tracking space.
+
+Space name: ${spaceName}
+${description ? `Initial description: ${description}` : ''}
+
+Ask 3 concise, targeted clarifying questions to help sharpen the investment thesis for this space. Questions should surface specifics like: stage preference, geography, technology differentiation angle, key problem being solved, competitive moat, excluded sub-segments.
+
+Return ONLY a JSON array of 3 question strings. No explanation. Example:
+["Question one?", "Question two?", "Question three?"]`,
+    }],
+  })
+  const text = response.content.filter(b => b.type === 'text').map(b => (b as {type:'text';text:string}).text).join('')
+  try {
+    const match = text.match(/\[[\s\S]*\]/)
+    if (match) return JSON.parse(match[0]) as string[]
+  } catch {}
+  return []
+}
+
+// Generate a refined investment thesis from Q&A
+export async function generateRefinedThesis(
+  spaceName: string,
+  description: string,
+  qa: Array<{ q: string; a: string }>
+): Promise<string> {
+  const qaBlock = qa.map(({ q, a }) => `Q: ${q}\nA: ${a}`).join('\n\n')
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 512,
+    messages: [{
+      role: 'user',
+      content: `Based on the following context, write a concise investment thesis (2-4 sentences) for this VC deal flow space. The thesis will be used to instruct an AI to source companies — be specific and actionable.
+
+Space: ${spaceName}
+${description ? `Description: ${description}` : ''}
+
+${qaBlock}
+
+Return only the thesis text. No labels, no JSON.`,
+    }],
+  })
+  return response.content.filter(b => b.type === 'text').map(b => (b as {type:'text';text:string}).text).join('').trim()
+}
+
 // Non-streaming: returns full text (used for sourcing)
 export async function runResearch(prompt: string): Promise<string> {
   const response = await anthropic.messages.create({
