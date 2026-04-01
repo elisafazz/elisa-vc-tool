@@ -3,13 +3,33 @@ import type { Space, Company, Research, AlertLogEntry } from './types'
 // All keys prefixed with fti: to avoid collisions with other apps on the same Redis instance
 const P = 'fti'
 
-// Lazy KV client — only initialized if env vars are present.
-// Returns null if KV isn't connected yet (e.g. before Vercel database is linked).
+// Lazy KV client — supports both standard Vercel KV env vars and custom-prefixed vars.
+// Vercel may use a prefix like "fti_" when connecting a store to a second project,
+// resulting in fti_REDIS_URL instead of KV_REST_API_URL.
 function getKV() {
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { kv } = require('@vercel/kv')
-  return kv as import('@vercel/kv').VercelKV
+  // Standard Vercel KV env vars
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { kv } = require('@vercel/kv')
+    return kv as import('@vercel/kv').VercelKV
+  }
+
+  // Fallback: parse fti_REDIS_URL (format: rediss://default:TOKEN@HOST:PORT)
+  const redisUrl = process.env.fti_REDIS_URL
+  if (redisUrl) {
+    try {
+      const parsed = new URL(redisUrl)
+      const token = parsed.password
+      const host = parsed.hostname
+      if (token && host) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { Redis } = require('@upstash/redis')
+        return new Redis({ url: `https://${host}`, token }) as import('@vercel/kv').VercelKV
+      }
+    } catch { /* ignore parse errors */ }
+  }
+
+  return null
 }
 
 // --- Spaces ---
