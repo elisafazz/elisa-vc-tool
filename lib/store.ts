@@ -3,13 +3,28 @@ import type { Space, Company, Research, AlertLogEntry } from './types'
 // All keys prefixed with fti: to avoid collisions with other apps on the same Redis instance
 const P = 'fti'
 
-// Lazy KV client — only initialized if env vars are present.
-// Returns null if KV isn't connected yet (e.g. before Vercel database is linked).
+// Lazy KV client — checks multiple env var naming conventions:
+// @vercel/kv uses KV_REST_API_URL / KV_REST_API_TOKEN
+// Upstash marketplace uses UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
+// Vercel may also use a custom prefix like fti_ when connecting a second store
 function getKV() {
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null
+  const url =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    Object.entries(process.env).find(([k]) => k.endsWith('KV_REST_API_URL'))?.[1] ||
+    Object.entries(process.env).find(([k]) => k.endsWith('UPSTASH_REDIS_REST_URL'))?.[1]
+
+  const token =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    Object.entries(process.env).find(([k]) => k.endsWith('KV_REST_API_TOKEN'))?.[1] ||
+    Object.entries(process.env).find(([k]) => k.endsWith('UPSTASH_REDIS_REST_TOKEN'))?.[1]
+
+  if (!url || !token) return null
+
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { kv } = require('@vercel/kv')
-  return kv as import('@vercel/kv').VercelKV
+  const { Redis } = require('@upstash/redis')
+  return new Redis({ url, token }) as import('@vercel/kv').VercelKV
 }
 
 // --- Spaces ---
