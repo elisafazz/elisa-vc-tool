@@ -12,7 +12,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json()
-  const { name, description, thesis } = body
+  const { name, description, thesis, alertsEnabled, alertEmail } = body
 
   if (!name?.trim()) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 })
@@ -25,8 +25,25 @@ export async function POST(req: Request) {
     thesis: thesis?.trim() ?? '',
     created: new Date().toISOString(),
     lastSourcedAt: null,
+    alertsEnabled: alertsEnabled === true,
+    alertEmail: alertEmail?.trim() || null,
+    lastAlertAt: null,
   }
 
   writeSpace(space)
   return NextResponse.json(space, { status: 201 })
+}
+
+export async function PATCH(req: Request) {
+  const body = await req.json()
+  const { id, ...updates } = body
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  const { readSpace } = await import('@/lib/store')
+  const existing = readSpace(id)
+  if (!existing) return NextResponse.json({ error: 'not found' }, { status: 404 })
+
+  const updated: Space = { ...existing, ...updates }
+  writeSpace(updated)
+  return NextResponse.json(updated)
 }

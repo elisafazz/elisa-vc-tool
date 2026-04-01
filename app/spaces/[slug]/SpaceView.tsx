@@ -23,6 +23,10 @@ export default function SpaceView({ space, initialCompanies }: Props) {
   const [newName, setNewName] = useState('')
   const [newWebsite, setNewWebsite] = useState('')
   const [newStage, setNewStage] = useState('')
+  const [alertsEnabled, setAlertsEnabled] = useState(space.alertsEnabled ?? false)
+  const [alertEmail, setAlertEmail] = useState(space.alertEmail ?? '')
+  const [showAlertConfig, setShowAlertConfig] = useState(false)
+  const [savingAlert, setSavingAlert] = useState(false)
 
   async function handleSelect(company: Company) {
     setSelected(company)
@@ -58,6 +62,19 @@ export default function SpaceView({ space, initialCompanies }: Props) {
     } finally {
       setSourcing(false)
     }
+  }
+
+  async function saveAlertSettings(enabled: boolean, email: string) {
+    setSavingAlert(true)
+    try {
+      await fetch('/api/spaces', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: space.id, alertsEnabled: enabled, alertEmail: email || null }),
+      })
+      setAlertsEnabled(enabled)
+    } catch {}
+    setSavingAlert(false)
   }
 
   async function handleAddCompany(e: React.FormEvent) {
@@ -101,6 +118,20 @@ export default function SpaceView({ space, initialCompanies }: Props) {
           {sourceMsg && (
             <span className="text-xs text-white/40">{sourceMsg}</span>
           )}
+          {/* Alert indicator + toggle */}
+          <button
+            onClick={() => setShowAlertConfig(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              alertsEnabled
+                ? 'bg-red-500/15 text-red-400 border-red-500/25 hover:bg-red-500/25'
+                : 'text-white/35 border-white/10 hover:text-white/60 hover:border-white/20'
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            {alertsEnabled ? 'Alerts on' : 'Alerts off'}
+          </button>
           <button
             onClick={() => setAddingCompany(v => !v)}
             className="px-3 py-1.5 rounded-full text-xs font-medium text-white/50 border border-white/10 hover:text-white/70 hover:border-white/20 transition-colors"
@@ -116,6 +147,44 @@ export default function SpaceView({ space, initialCompanies }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Alert config panel */}
+      {showAlertConfig && (
+        <div className="flex-shrink-0 mx-6 mt-3 mb-1 rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <p className="text-white/60 text-xs font-semibold uppercase tracking-wider">Weekly Email Alerts</p>
+          <p className="text-white/35 text-xs leading-relaxed">
+            Every Monday at 8am UTC — new companies, FDA approvals/rejections, funding rounds, partnerships, and company announcements in the <span className="text-white/55">{space.name}</span> space.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              type="email"
+              value={alertEmail}
+              onChange={e => setAlertEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 transition-colors"
+            />
+            <button
+              onClick={() => saveAlertSettings(true, alertEmail)}
+              disabled={savingAlert || !alertEmail.trim()}
+              className="px-4 py-2 rounded-full text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 disabled:opacity-40 transition-colors"
+            >
+              {savingAlert ? 'Saving...' : alertsEnabled ? 'Update' : 'Enable'}
+            </button>
+            {alertsEnabled && (
+              <button
+                onClick={() => { saveAlertSettings(false, ''); setShowAlertConfig(false) }}
+                disabled={savingAlert}
+                className="px-4 py-2 rounded-full text-xs font-medium text-white/35 border border-white/8 hover:text-red-400 hover:border-red-500/20 disabled:opacity-40 transition-colors"
+              >
+                Disable
+              </button>
+            )}
+          </div>
+          {space.lastAlertAt && (
+            <p className="text-white/20 text-xs">Last sent {new Date(space.lastAlertAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          )}
+        </div>
+      )}
 
       {/* Add company form */}
       {addingCompany && (

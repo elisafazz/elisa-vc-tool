@@ -7,6 +7,9 @@ export interface Space {
   thesis: string
   created: string
   lastSourcedAt: string | null
+  alertsEnabled: boolean
+  alertEmail: string | null   // email to send news digests to
+  lastAlertAt: string | null  // last time a news alert was sent
 }
 
 export interface Company {

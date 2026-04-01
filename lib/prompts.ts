@@ -179,3 +179,51 @@ Return your findings as a JSON array with this exact structure (no markdown, raw
 
 Find at least 5 and up to 15 companies. Only include real, verifiable companies with public web presence. Do not fabricate.`
 }
+
+export function spaceNewsPrompt(spaceName: string, thesis: string, trackedCompanies: string[]): string {
+  const companyList = trackedCompanies.length > 0
+    ? `\nCurrently tracked companies in this space: ${trackedCompanies.join(', ')}`
+    : ''
+
+  return `You are a VC research analyst monitoring the "${spaceName}" investment space.
+
+Investment thesis: ${thesis}${companyList}
+
+Search comprehensively for news and developments from the PAST 7 DAYS in this space. Cover ALL of the following:
+
+**New Companies & Funding**
+- New startups announced or emerged in this space
+- Funding rounds (seed, Series A–D, growth) — company, amount, date, investors, strategic rationale
+- M&A, acqui-hires, or exits
+Sources: Crunchbase, TechCrunch, VentureBeat, STAT News, FierceBiotech, press releases
+
+**Regulatory & Clinical**
+- FDA approvals, clearances, rejections, or Complete Response Letters in this space
+- IND filings, NDA/BLA submissions
+- EMA decisions or CHMP opinions
+- New clinical trials initiated (ClinicalTrials.gov)
+- Published trial results or interim data
+Sources: FDA.gov, EMA.europa.eu, ClinicalTrials.gov, SEC EDGAR (8-K filings), press releases
+
+**Company Announcements** (for tracked companies especially, but scan broadly)
+- Partnerships, licensing deals, collaborations
+- Pipeline updates, pivots, new indications
+- Leadership changes (CEO, CSO, CMO hires or departures)
+- Scientific publications in peer-reviewed journals
+Sources: Company IR pages, SEC EDGAR, PubMed, PRNewswire, BusinessWire
+
+**Market & Competitive Intelligence**
+- New competitive entrants or modalities
+- Academic breakthroughs that could affect the space
+- Payer coverage decisions or reimbursement changes
+- Policy or legislation changes relevant to the space
+Sources: Nature, Science, NEJM, JAMA, legislative databases, payer coverage databases
+
+Output format:
+- Group by category (Funding, Regulatory, Announcements, Intelligence)
+- Each item: short title in bold, 1–2 sentence description, date if known, direct source link
+- If no news found in a category, write "Nothing notable this week."
+- Flag items relevant to tracked companies with *(Tracked)*
+- Do not fabricate — only report verifiable developments
+- If a story has no source link available, mark it *(Unverified)*`
+}

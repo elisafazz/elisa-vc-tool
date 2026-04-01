@@ -16,6 +16,8 @@ export default function NewSpacePage() {
   const [thesis, setThesis] = useState('')
   const [questions, setQuestions] = useState<string[]>([])
   const [answers, setAnswers] = useState<string[]>([])
+  const [alertsEnabled, setAlertsEnabled] = useState(false)
+  const [alertEmail, setAlertEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -70,7 +72,7 @@ export default function NewSpacePage() {
       const res = await fetch('/api/spaces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, thesis }),
+        body: JSON.stringify({ name, description, thesis, alertsEnabled, alertEmail: alertsEnabled ? alertEmail : null }),
       })
       if (!res.ok) throw new Error('Failed to create space')
       router.push('/')
@@ -220,6 +222,46 @@ export default function NewSpacePage() {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 transition-colors resize-none"
                 />
                 <p className="text-white/25 text-xs mt-1.5">This thesis guides Claude when sourcing new companies. Edit freely.</p>
+              </div>
+
+              {/* Email alert toggle */}
+              <div className={`rounded-xl border p-4 transition-colors ${alertsEnabled ? 'border-red-500/30 bg-red-500/8' : 'border-white/10 bg-white/[0.02]'}`}>
+                <button
+                  type="button"
+                  onClick={() => setAlertsEnabled(v => !v)}
+                  className="flex items-center justify-between w-full"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${alertsEnabled ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5 border border-white/10'}`}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={alertsEnabled ? 'text-red-400' : 'text-white/35'}>
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-sm font-medium transition-colors ${alertsEnabled ? 'text-white/80' : 'text-white/50'}`}>Weekly email alerts</p>
+                      <p className="text-white/30 text-xs mt-0.5">
+                        {alertsEnabled ? 'Sends every Monday — funding, FDA, company news' : 'Get weekly digests of news, funding, FDA updates, and company announcements in this space'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${alertsEnabled ? 'bg-red-500' : 'bg-white/15'}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${alertsEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                </button>
+
+                {alertsEnabled && (
+                  <div className="mt-4 pt-4 border-t border-white/8">
+                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Send alerts to</label>
+                    <input
+                      type="email"
+                      value={alertEmail}
+                      onChange={e => setAlertEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500/40 transition-colors"
+                    />
+                    <p className="text-white/25 text-xs mt-1.5">Digest sent every Monday at 8am UTC. Covers new companies, FDA approvals, funding rounds, and company announcements.</p>
+                  </div>
+                )}
               </div>
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
