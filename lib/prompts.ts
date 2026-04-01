@@ -14,51 +14,68 @@ Company: ${companyName}${contextBlock}
 Search comprehensively before drafting:
 - Company website, LinkedIn, Crunchbase, SEC/EDGAR, PitchBook press releases
 - Recent news (Google News, TechCrunch, STAT News, FierceBiotech as relevant)
-- Academic/clinical literature on the underlying science via PubMed if applicable
+- Academic/clinical literature on the underlying science via PubMed
 - ClinicalTrials.gov if the company is clinical-stage
 
-Then produce the brief below.
+IMPORTANT: You must output ALL sections below in order, using the exact headings shown. Never skip a section. If information is unavailable for a section, write a single bullet: "- Not found." Do not merge or rename sections.
 
-Output format: bullet points only - no prose. Every factual claim has a direct-linked primary source in parentheses immediately after the bullet. No subjective assessment or editorial judgment anywhere - report only what sources state.
+Output format: bullet points only - no prose. Every factual claim has a direct-linked primary source in parentheses immediately after the bullet. No subjective assessment or editorial judgment - report only what sources state.
 
-### ${companyName} - Quick Brief
+### ${companyName} - DD at a Glance
 
 **What they do**
-- [Description] (company website - link)
-- [Core problem addressed] (source - link)
+- [Description of product/platform] (company website - link)
+- [Core problem addressed and target customer/patient] (source - link)
 
 **Stage / Funding**
-- [Stage, round size, date] (Crunchbase - link)
-- [Lead investors] (source - link)
+- [Development or commercial stage] (source - link)
+- [Most recent round: size, date, lead investors] (Crunchbase - link)
+- [Total funding raised] (Crunchbase - link)
 
 **Founding team**
-- [Founder - title, prior roles] (LinkedIn - link)
-- [Co-founder if applicable] (source - link)
+- [Founder - title, prior company, prior role] (LinkedIn - link)
+- [Co-founder or key executive if applicable] (LinkedIn - link)
 
 **Product / Technology**
-- [What it is, how it works] (source - link)
-- [Who uses it / indication / customer] (source - link)
+- [Mechanism or technical approach - how it works] (source - link)
+- [Indication, use case, or customer segment] (source - link)
 - [Business model] (source - link)
 
+**Key scientific concepts**
+- [Core biological, chemical, or technical concept underpinning the approach] (source - link)
+- [Second key concept if applicable] (source - link)
+
+**Prevailing disease treatment theory**
+- [What the scientific/medical community currently believes is the right way to treat or address this disease or problem - e.g., "lowering of mutant HTT protein in Huntington's disease", "amyloid clearance in Alzheimer's"] (source - link)
+- [Does this company's approach align with, challenge, or diverge from that prevailing theory? State factually.] (source - link or *(Inference)*)
+
+**Seminal papers**
+- [Author et al., Year - finding relevant to this approach] (PubMed PMID - link)
+- [Author et al., Year - second key paper] (PubMed PMID - link)
+- [Conflicting or cautionary study if applicable] (PubMed PMID - link)
+
+**Clinical pipeline** *(skip bullets if pre-clinical or non-clinical)*
+- [Trial ID, phase, indication, status, primary endpoint] (ClinicalTrials.gov NCT - link)
+
 **Differentiation**
-- [What the company claims sets them apart] *(Claimed - company website - link)*
-- [Independent corroboration or contradiction if available] (source - link)
+- [What the company claims sets them apart] *(Claimed)* (company website - link)
+- [Independent corroboration or contradiction if found] (source - link)
 
 **Competitive landscape**
-- [Competitor 1 - factual comparison] (source - link)
-- [Competitor 2] (source - link)
+- [Competitor or approach 1 - key difference] (source - link)
+- [Competitor or approach 2] (source - link)
 
 **Traction**
-- [Metric - stated exactly as reported] (source - link or *(Unverified)*)
-- [Customer / partnership / regulatory / clinical milestone] (source - link)
+- [Metric stated exactly as reported] (source - link or *(Unverified)*)
+- [Partnership, regulatory, or clinical milestone] (source - link)
 
-**Scientific / clinical foundation** *(if applicable)*
-- [Key supporting study or finding] (PubMed PMID - link)
-- [Conflicting or cautionary finding] (PubMed PMID - link)
+**Key risks**
+- [Scientific, clinical, regulatory, competitive, or commercial risk - factual only] (source - link or *(Inference)*)
+- [Second risk] (source - link or *(Inference)*)
 
 **Open questions**
-- [Specific factual gap]
-- [Specific factual gap]
+- [Specific factual gap that would materially change the view]
+- [Second gap]
 
 **Questions to ask in the meeting**
 - [Specific question]
@@ -66,11 +83,13 @@ Output format: bullet points only - no prose. Every factual claim has a direct-l
 - [Specific question]
 
 Rules:
-- Bullet points only
+- ALL sections required - write "- Not found." if no data available
+- Bullet points only, no prose
 - Direct link on every source
 - No subjective assessment, opinion, or qualitative judgment
-- Do not fabricate metrics or funding rounds
-- For scientific claims: cite with PubMed PMID and direct link (https://pubmed.ncbi.nlm.nih.gov/[PMID])
+- Do not fabricate metrics, funding rounds, trial IDs, or study results
+- For PubMed: always include PMID and link https://pubmed.ncbi.nlm.nih.gov/[PMID]
+- For ClinicalTrials: always include NCT and link https://clinicaltrials.gov/study/[NCT]
 - Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)*`
 }
 
@@ -91,65 +110,70 @@ ${contextBlock}${spaceBlock}
 
 Your task is to map the full competitive and scientific landscape relevant to this company - not just direct competitors, but ALL approaches addressing the same problem.
 
-STEP 1 - Characterize the company
-Using the context above and web search, establish:
-- Disease area or market (e.g., Type 1 Diabetes, enterprise security, logistics)
-- Specific modality or approach (e.g., stem cell-derived beta cell replacement, LLM-based SIEM, autonomous last-mile delivery)
-- Development stage (preclinical / clinical / commercial)
-- Key differentiation claim
+First, use web search to characterize the company: disease area or market, specific modality or approach, development stage, and key differentiation claim.
 
-STEP 2 - Research the full landscape across ALL of the following dimensions:
+IMPORTANT: You must output ALL sections below in order, using the exact headings shown. Never skip a section. If information is unavailable for a section, write a single bullet: "- Not found." Do not merge or rename sections.
+
+Output format: bullet points only - no prose. Every factual claim has a direct-linked primary source in parentheses immediately after the bullet. No subjective assessment or editorial judgment - report only what sources state.
+
+### ${companyName} - Competitive Landscape
 
 **Disease / market overview**
-- Epidemiology or market size - state exact figure and source
-- Standard of care or incumbent solution
-- Key unmet need this company addresses
-- Relevant regulatory body / pathway (FDA, EMA, FTC, etc.)
-Sources: PubMed, clinical guidelines, WHO, market research firms, news
+- [Epidemiology or market size - exact figure] (source - link)
+- [Standard of care or incumbent solution] (source - link)
+- [Key unmet need this company addresses] (source - link)
+- [Relevant regulatory body and pathway] (source - link)
+
+**Key scientific concepts**
+- [Core biological, chemical, or technical concept relevant to this space] (source - link)
+- [Second key concept] (source - link)
+- [Third key concept if applicable] (source - link)
+
+**Seminal papers**
+- [Author et al., Year - foundational finding for this approach] (PubMed PMID - link)
+- [Author et al., Year - second key paper] (PubMed PMID - link)
+- [Author et al., Year - conflicting or cautionary study] (PubMed PMID - link)
 
 **All competing modalities**
-For EACH distinct approach addressing the same disease or problem - even if not the same modality as the company:
-- Approach name, mechanism, lead companies, stage, funding
-- Example: for a T1D cell therapy company, cover: autologous cell therapy, allogeneic cell therapy, gene therapy, islet transplant, closed-loop insulin delivery, immunotherapy
-Sources: ClinicalTrials.gov, Crunchbase, news, company websites
+For EACH distinct approach addressing the same disease or problem:
+- [Approach name - mechanism - lead companies - stage - funding] (source - link)
+- [Second approach] (source - link)
+- [Third approach] (source - link)
 
-**Clinical pipeline** *(if applicable - skip if not a clinical-stage company or indication)*
+**Clinical pipeline**
 Search ClinicalTrials.gov for active and completed trials in this indication:
-- Trial ID (NCT number), sponsor, phase, primary endpoint, status, enrollment
-Sources: clinicaltrials.gov - link each trial directly
-
-**Scientific foundation**
-Key studies that validate or challenge the approach:
-- Supporting studies: mechanism validation, proof-of-concept
-- Cautionary or conflicting findings
-Sources: PubMed - cite PMID and direct link for every study
+- [NCT number - sponsor - phase - primary endpoint - status] (ClinicalTrials.gov - link)
+- [Second trial] (ClinicalTrials.gov - link)
 
 **Regulatory landscape**
-- Precedent approvals or clearances in this space
-- Relevant FDA/EMA guidance documents
-- Any regulatory risk specific to this modality
-Sources: FDA.gov, EMA.europa.eu, news
+- [Precedent approval or clearance in this space] (FDA.gov or EMA - link)
+- [Relevant guidance document] (source - link)
+- [Regulatory risk specific to this modality] (source - link or *(Inference)*)
 
 **Funding activity (last 24 months)**
-Rounds, partnerships, acquisitions across the space - not just the target company:
-- Company, round size, date, lead investors, strategic rationale
-Sources: Crunchbase, TechCrunch, press releases - link each
+Rounds, partnerships, acquisitions across the space:
+- [Company - round size - date - lead investors - strategic rationale] (Crunchbase or press release - link)
+- [Second deal] (source - link)
 
 **Key risks**
-- Scientific, clinical, regulatory, competitive, or commercial risks stated factually
-- No softening, no editorializing
+- [Scientific, clinical, regulatory, competitive, or commercial risk - factual only] (source - link or *(Inference)*)
+- [Second risk] (source - link or *(Inference)*)
+- [Third risk] (source - link or *(Inference)*)
 
 **Open questions for diligence**
-- Specific unanswered factual questions that would materially change the investment view
+- [Specific unanswered factual question that would materially change the investment view]
+- [Second question]
+- [Third question]
 
 Rules:
-- Bullet points only - no prose paragraphs
+- ALL sections required - write "- Not found." if no data available
+- Bullet points only, no prose paragraphs
 - Direct link on every source - no bare citations
 - No subjective assessment, opinion, or qualitative judgment
 - Do not fabricate trial IDs, funding rounds, or study results
-- Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)* | Conflicting: *(Conflicting)*
-- For PubMed: always include PMID and direct link https://pubmed.ncbi.nlm.nih.gov/[PMID]
-- For ClinicalTrials: always include NCT number and direct link https://clinicaltrials.gov/study/[NCT]`
+- For PubMed: always include PMID and link https://pubmed.ncbi.nlm.nih.gov/[PMID]
+- For ClinicalTrials: always include NCT and link https://clinicaltrials.gov/study/[NCT]
+- Unverified: *(Unverified)* | Inferred: *(Inference)* | Company-claimed: *(Claimed)* | Conflicting: *(Conflicting)*`
 }
 
 export function sourcingPrompt(spaceName: string, thesis: string, existingNames: string[]): string {
