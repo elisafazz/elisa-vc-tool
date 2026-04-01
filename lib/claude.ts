@@ -8,20 +8,21 @@ export const anthropic = new Anthropic({
 type MessageParam = Anthropic.Messages.MessageParam
 type ContentBlockParam = Anthropic.Messages.ContentBlockParam
 
-function buildUserContent(prompt: string, pdfPath?: string | null): ContentBlockParam[] {
+function buildUserContent(prompt: string, pdfPath?: string | null, pdfBase64?: string | null): ContentBlockParam[] {
   const blocks: ContentBlockParam[] = []
 
-  if (pdfPath) {
+  if (pdfBase64) {
+    blocks.push({
+      type: 'document',
+      source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 },
+    } as ContentBlockParam)
+  } else if (pdfPath) {
     try {
       const pdfBytes = fs.readFileSync(pdfPath)
       const base64 = pdfBytes.toString('base64')
       blocks.push({
         type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: base64,
-        },
+        source: { type: 'base64', media_type: 'application/pdf', data: base64 },
       } as ContentBlockParam)
     } catch {
       // PDF unavailable — continue without it
@@ -35,10 +36,11 @@ function buildUserContent(prompt: string, pdfPath?: string | null): ContentBlock
 // Returns a ReadableStream of SSE chunks for streaming to the client
 export async function streamResearch(
   prompt: string,
-  pdfPath?: string | null
+  pdfPath?: string | null,
+  pdfBase64?: string | null
 ): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder()
-  const content = buildUserContent(prompt, pdfPath)
+  const content = buildUserContent(prompt, pdfPath, pdfBase64)
 
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
