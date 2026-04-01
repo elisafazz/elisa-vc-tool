@@ -74,7 +74,17 @@ export async function POST(req: Request) {
       ? ddPrompt(companyName, description || company.description)
       : competitivePrompt(companyName, description || company.description, spaceName, thesis)
 
-  const upstream = await streamResearch(prompt, null, pdfBase64, deckText)
+  let upstream: ReadableStream<Uint8Array>
+  try {
+    upstream = await streamResearch(prompt, null, pdfBase64, deckText)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const isCredits = msg.toLowerCase().includes('credit') || msg.toLowerCase().includes('billing') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('insufficient')
+    return NextResponse.json(
+      { error: isCredits ? 'API credits exhausted. Add credits at console.anthropic.com.' : `API error: ${msg}` },
+      { status: 402 }
+    )
+  }
   const reader = upstream.getReader()
   const encoder = new TextEncoder()
 
