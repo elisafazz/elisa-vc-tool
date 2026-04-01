@@ -142,21 +142,14 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
     })
   }
 
-  const PDF_SIZE_LIMIT = 3 * 1024 * 1024
   const TXT_SIZE_LIMIT = 1 * 1024 * 1024
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const isPdf = file.type === 'application/pdf'
     const isTxt = file.type === 'text/plain' || file.name.endsWith('.txt')
-    if (!isPdf && !isTxt) { setUploadError('Only PDF or .txt files are accepted'); return }
-    if (isPdf && file.size > PDF_SIZE_LIMIT) {
-      setUploadError(`PDF too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 3 MB. For larger decks, paste into Claude, ask it to extract text, save as .txt.`)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-    if (isTxt && file.size > TXT_SIZE_LIMIT) {
+    if (!isTxt) { setUploadError('Only .txt files accepted. Open the PDF in Claude, ask it to extract all text, save the response as .txt.'); return }
+    if (file.size > TXT_SIZE_LIMIT) {
       setUploadError(`Text file too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 1 MB.`)
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
@@ -201,7 +194,7 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,text/plain,application/pdf"
+            accept=".txt,text/plain"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -210,7 +203,7 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
             disabled={uploading}
             className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : 'Upload Pitch Deck (.txt or PDF)'}
+            {uploading ? 'Uploading...' : 'Upload Deck Context (.txt)'}
           </button>
           {deckName && (
             <span className="text-xs text-white/40 truncate max-w-[200px]">{deckName}</span>
