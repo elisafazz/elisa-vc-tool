@@ -5,7 +5,7 @@ import Link from 'next/link'
 import DealFlowEntryView from '@/components/DealFlowEntry'
 import type { DealFlowEntry } from '@/lib/types'
 
-const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary.`
+const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary. Output as a downloadable .txt file.`
 
 function ExtractionInstructions() {
   const [copied, setCopied] = useState(false)
