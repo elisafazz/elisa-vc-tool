@@ -41,3 +41,23 @@ export interface AlertLogEntry {
   timestamp: string
   emailSent: boolean
 }
+
+export interface DealFlowEntry {
+  id: string
+  createdAt: string
+  companyName: string
+  firstContacted: string
+  overview: string
+  tag: string | null
+  country: string | null
+  jobTitleName: string | null
+  bioClassification: string | null
+  bioDiseaseArea: string | null
+  bioModality: string | null
+  nextSeries: string | null
+  stage: string | null
+  personInCharge: string
+  status: string
+  websiteUrl: string | null
+  contactBackground: string
+}

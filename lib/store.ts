@@ -1,4 +1,4 @@
-import type { Space, Company, Research, AlertLogEntry } from './types'
+import type { Space, Company, Research, AlertLogEntry, DealFlowEntry } from './types'
 
 // All keys prefixed with fti: to avoid collisions with other apps on the same Redis instance
 const P = 'fti'
@@ -140,6 +140,35 @@ export async function writeDeck(companyId: string, text: string): Promise<void> 
   const kv = getKV()
   if (!kv) return
   await kv.set(`${P}:deck:${companyId}`, text)
+}
+
+// --- Deal Flow Entries ---
+
+export async function listDealFlows(): Promise<DealFlowEntry[]> {
+  const kv = getKV()
+  if (!kv) return []
+  try {
+    const ids = await kv.smembers<string[]>(`${P}:idx:dealflows`)
+    if (!ids.length) return []
+    const entries = await Promise.all(ids.map((id: string) => kv.get<DealFlowEntry>(`${P}:dealflow:${id}`)))
+    return (entries.filter(Boolean) as DealFlowEntry[])
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  } catch { return [] }
+}
+
+export async function readDealFlow(id: string): Promise<DealFlowEntry | null> {
+  const kv = getKV()
+  if (!kv) return null
+  try { return kv.get<DealFlowEntry>(`${P}:dealflow:${id}`) } catch { return null }
+}
+
+export async function writeDealFlow(entry: DealFlowEntry): Promise<void> {
+  const kv = getKV()
+  if (!kv) return
+  await Promise.all([
+    kv.set(`${P}:dealflow:${entry.id}`, entry),
+    kv.sadd(`${P}:idx:dealflows`, entry.id),
+  ])
 }
 
 // --- Alerts ---
