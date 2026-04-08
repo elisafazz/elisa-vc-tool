@@ -10,20 +10,28 @@ function DeckUploadPanel({
   deckName,
   uploading,
   uploadError,
-  onFileChange,
+  onFile,
 }: {
   fileInputRef: React.RefObject<HTMLInputElement | null>
   deckName: string | null
   uploading: boolean
   uploadError: string | null
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFile: (file: File) => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
   function copyPrompt() {
     navigator.clipboard.writeText(EXTRACT_PROMPT)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) onFile(file)
   }
 
   return (
@@ -44,18 +52,34 @@ function DeckUploadPanel({
         </div>
         <p className="text-white/30 text-xs">Save the response as a .txt file, then upload below.</p>
       </div>
-      <div className="flex items-center gap-3">
-        <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={onFileChange} />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/15 text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
-        >
-          {uploading ? 'Uploading...' : deckName ? 'Replace .txt' : 'Upload .txt'}
-        </button>
-        {deckName && <span className="text-xs text-white/40 truncate max-w-[200px]">{deckName}</span>}
-        {uploadError && <span className="text-xs text-red-400">{uploadError}</span>}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,text/plain"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = '' }}
+      />
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors ${
+          dragOver
+            ? 'border-red-500/40 bg-red-500/5 text-red-400'
+            : uploading
+            ? 'border-white/10 bg-white/[0.02] text-white/30 cursor-default'
+            : 'border-white/15 bg-white/[0.02] text-white/40 hover:border-white/30 hover:text-white/60'
+        }`}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <span className="text-xs font-medium">
+          {uploading ? 'Uploading...' : deckName ? `Replace: ${deckName}` : 'Drop .txt here or click to browse'}
+        </span>
       </div>
+      {uploadError && <span className="text-xs text-red-400">{uploadError}</span>}
     </div>
   )
 }
@@ -201,14 +225,11 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
 
   const TXT_SIZE_LIMIT = 1 * 1024 * 1024
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function handleFile(file: File) {
     const isTxt = file.type === 'text/plain' || file.name.endsWith('.txt')
     if (!isTxt) { setUploadError('Only .txt files accepted. Open the PDF in Claude, ask it to extract all text, save the response as .txt.'); return }
     if (file.size > TXT_SIZE_LIMIT) {
       setUploadError(`Text file too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 1 MB.`)
-      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
     setUploadError(null)
@@ -230,7 +251,6 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
       setUploadError('Upload failed')
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -252,7 +272,7 @@ export default function ResearchPanel({ company, savedDD, savedCompetitive }: Pr
           deckName={deckName}
           uploading={uploading}
           uploadError={uploadError}
-          onFileChange={handleFileChange}
+          onFile={handleFile}
         />
       </div>
 

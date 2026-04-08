@@ -1,35 +1,94 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import DealFlowEntryView from '@/components/DealFlowEntry'
 import type { DealFlowEntry } from '@/lib/types'
 
 const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary. Output as a downloadable .txt file.`
 
-function ExtractionInstructions() {
+function ExtractionInstructions({ onText }: { onText: (text: string) => void }) {
   const [copied, setCopied] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [fileName, setFileName] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   function copyPrompt() {
     navigator.clipboard.writeText(EXTRACT_PROMPT)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  function readFile(file: File) {
+    setFileError(null)
+    if (!file.name.endsWith('.txt') && file.type !== 'text/plain') {
+      setFileError('Only .txt files accepted.')
+      return
+    }
+    if (file.size > 1 * 1024 * 1024) {
+      setFileError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 1 MB.`)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = e => {
+      const text = e.target?.result as string
+      if (text) { onText(text); setFileName(file.name) }
+    }
+    reader.readAsText(file)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) readFile(file)
+  }
+
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 space-y-2">
-      <p className="text-white/45 text-xs leading-relaxed">
-        Go to <span className="text-white/70">claude.ai</span>, upload your PDF, and enter this prompt:
-      </p>
-      <div className="flex items-start gap-2 rounded-md bg-white/5 border border-white/8 px-3 py-2">
-        <p className="flex-1 text-white/50 text-xs leading-relaxed font-mono">{EXTRACT_PROMPT}</p>
-        <button
-          onClick={copyPrompt}
-          className="flex-shrink-0 text-xs px-2.5 py-1 rounded-full border transition-colors mt-0.5 font-medium"
-          style={copied ? { borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(248,113,113)', background: 'rgba(239,68,68,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' }}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
+    <div className="space-y-2">
+      <div className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 space-y-2">
+        <p className="text-white/45 text-xs leading-relaxed">
+          Go to <span className="text-white/70">claude.ai</span>, upload your PDF, and enter this prompt:
+        </p>
+        <div className="flex items-start gap-2 rounded-md bg-white/5 border border-white/8 px-3 py-2">
+          <p className="flex-1 text-white/50 text-xs leading-relaxed font-mono">{EXTRACT_PROMPT}</p>
+          <button
+            onClick={copyPrompt}
+            className="flex-shrink-0 text-xs px-2.5 py-1 rounded-full border transition-colors mt-0.5 font-medium"
+            style={copied ? { borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(248,113,113)', background: 'rgba(239,68,68,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <p className="text-white/30 text-xs">Drop the downloaded .txt below, click to browse, or paste text directly into the field.</p>
       </div>
-      <p className="text-white/30 text-xs">Paste the full response into the text area below.</p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,text/plain"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f); e.target.value = '' }}
+      />
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors ${
+          dragOver
+            ? 'border-red-500/40 bg-red-500/5 text-red-400'
+            : 'border-white/15 bg-white/[0.02] text-white/40 hover:border-white/30 hover:text-white/60'
+        }`}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <span className="text-xs font-medium">
+          {fileName ? `Loaded: ${fileName}` : 'Drop .txt here or click to browse'}
+        </span>
+      </div>
+      {fileError && <p className="text-xs text-red-400">{fileError}</p>}
     </div>
   )
 }
@@ -124,7 +183,7 @@ export default function DealFlowClient() {
         {/* Left: input form */}
         <div className="space-y-5 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           {/* Deck extraction instructions */}
-          <ExtractionInstructions />
+          <ExtractionInstructions onText={setDeckText} />
 
           {/* Deck text */}
           <div>
