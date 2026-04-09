@@ -44,7 +44,7 @@ function renderMarkdown(text: string): string {
     .replace(/\n{2,}/g, '\n\n')
 }
 
-const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary.`
+const EXTRACT_PROMPT = `Please extract all text from this pitch deck PDF and output it as plain text. For any charts, graphs, or tables, describe their content in full detail. Output only the extracted content with no preamble or commentary. Output as a downloadable .txt file.`
 
 function DeckUploadSection({
   pdfFile,
