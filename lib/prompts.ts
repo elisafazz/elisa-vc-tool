@@ -220,9 +220,11 @@ Return this exact JSON structure:
   "tag": "Medtech" | "Biotech" | "Healthtech" | "Others" | null,
   "country": "Japan" | "US" | "UK" | "EU" | "Canada" | "Singapore" | "Taiwan" | "Australia" | "France" | "China" | "Sweden" | "Korea" | "Japan/US" | "Spain" | "Switzerland" | "Netherlands" | "Israel" | null,
   "jobTitleName": string | null,
+  "relatedScientist": string | null,
   "bioClassification": "Therapeutics & Drug discovery" | "Analytical tools & services" | "Diagnosis (Hard & Software)" | "Diagnosis (Drug & IVD)" | "Medical device (Conventional)" | "Medical device (DTx&SaMD)" | "Food & Agriculture" | "Others" | null,
-  "bioDiseaseArea": "Cancer (がん)" | "Respiratory (呼吸器)" | "Cardiovascular/Metabolic/Renal (循環器/代謝/腎)" | "Gastrointestinal (消化器)" | "Skin (皮膚)" | "Bone/Joint (骨/関節)" | "Other Immunology/Inflammation (その他免疫・炎症)" | "Eye (眼)" | "Pain (疼痛)" | "Blood (血液)" | "Infectious Disease/Vaccine (感染症/ワクチン)" | "Other (その他)" | "N/A" | "Central Nervous System/Muscle (中枢神経/筋)" | "Neurology/Psychiatric" | "Ophthalmology" | "Liver" | "Protein Misfolding" | "Urinary(泌尿器)" | "Kidney" | null,
+  "bioDiseaseArea": "Cancer" | "Respiratory" | "Cardiovascular/Metabolic/Renal" | "Gastrointestinal" | "Skin" | "Bone/Joint" | "Other Immunology/Inflammation" | "Eye" | "Pain" | "Blood" | "Infectious Disease/Vaccine" | "Other" | "N/A" | "Central Nervous System/Muscle" | "Neurology/Psychiatric" | "Ophthalmology" | "Liver" | "Protein Misfolding" | "Urinary" | "Kidney" | null,
   "bioModality": "DTx" | "Small molecules" | "Antibody" | "Protein" | "Nucleic acid" | "Peptide" | "Gene therapy" | "Regenerative Medicine" | "Other modality" | "N/A" | "Lipopeptides" | "Cell therapy" | "radiopharmaceutical" | "phospholipid" | null,
+  "healthtech": string[],
   "nextSeries": "Unestablished" | "Seed" | "Series A" | "Series B" | "Series C" | "Series D" | "Series E" | null,
   "stage": "Unestablished" | "Seed" | "Early" | "Middle" | "Later" | null,
   "websiteUrl": string | null
@@ -236,7 +238,9 @@ Stage mapping:
 - Series C and above → "Later"
 
 nextSeries = the round they are currently raising or most recently raised.
-jobTitleName = the primary contact or founder's name and title if mentioned (e.g., "Jane Smith, CEO").`
+jobTitleName = the primary contact or founder's name and title if mentioned (e.g., "Jane Smith, CEO").
+relatedScientist = the lead scientist, PI, or named scientific founder if mentioned in the deck, else null.
+healthtech = array of relevant healthtech tags if tag == "Healthtech" (e.g. "Mental Health", "Remote Monitoring", "Care Navigation"), otherwise empty array [].`
 }
 
 export function spaceNewsPrompt(spaceName: string, thesis: string, trackedCompanies: string[]): string {

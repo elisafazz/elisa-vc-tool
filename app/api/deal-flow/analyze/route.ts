@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const healthtechRaw = extracted.healthtech
     const entry: DealFlowEntry = {
       id,
       createdAt: new Date().toISOString(),
@@ -50,15 +51,23 @@ export async function POST(req: NextRequest) {
       tag: (extracted.tag as string | null) ?? null,
       country: (extracted.country as string | null) ?? null,
       jobTitleName: (extracted.jobTitleName as string | null) ?? null,
+      relatedScientist: (extracted.relatedScientist as string | null) ?? null,
       bioClassification: (extracted.bioClassification as string | null) ?? null,
       bioDiseaseArea: (extracted.bioDiseaseArea as string | null) ?? null,
       bioModality: (extracted.bioModality as string | null) ?? null,
+      healthtech: Array.isArray(healthtechRaw) ? (healthtechRaw as string[]) : [],
       nextSeries: (extracted.nextSeries as string | null) ?? null,
       stage: (extracted.stage as string | null) ?? null,
       personInCharge: personInCharge || '',
+      nda: false,
+      ndaExpired: null,
       status: 'Contacted',
+      notDisclosed: false,
       websiteUrl: (extracted.websiteUrl as string | null) ?? null,
       contactBackground: contactBackground || '',
+      filesMediaUrl: null,
+      notionPageId: null,
+      notionPageUrl: null,
     }
 
     await writeDealFlow(entry)

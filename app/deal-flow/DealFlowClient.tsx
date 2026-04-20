@@ -444,6 +444,16 @@ export default function DealFlowClient() {
     setBatchFiles(prev => prev.map(f => ({ ...f, expanded: expand })))
   }
 
+  // Called when an entry is successfully synced to Notion — keeps result/history/batch in sync
+  function handleNotionSynced(id: string, notionPageId: string, notionPageUrl: string) {
+    const patch = { notionPageId, notionPageUrl }
+    setResult(prev => (prev && prev.id === id ? { ...prev, ...patch } : prev))
+    setHistory(prev => prev.map(e => (e.id === id ? { ...e, ...patch } : e)))
+    setBatchResults(prev =>
+      prev.map(r => (r.entry && r.entry.id === id ? { ...r, entry: { ...r.entry, ...patch } } : r)),
+    )
+  }
+
   return (
     <main className="min-h-screen bg-gray-950 pb-24">
       {/* Hero */}
@@ -646,7 +656,7 @@ export default function DealFlowClient() {
                   {batchResults.map((r, i) => (
                     <div key={i}>
                       {r.entry ? (
-                        <DealFlowEntryView entry={r.entry} />
+                        <DealFlowEntryView entry={r.entry} onNotionSynced={handleNotionSynced} />
                       ) : (
                         <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
                           <p className="text-red-400 text-sm font-medium">{r.fileName}</p>
@@ -664,7 +674,9 @@ export default function DealFlowClient() {
         {/* Right: result + history */}
         <div className="space-y-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
           {/* Single mode result */}
-          {mode === 'single' && result && <DealFlowEntryView entry={result} />}
+          {mode === 'single' && result && (
+            <DealFlowEntryView entry={result} onNotionSynced={handleNotionSynced} />
+          )}
 
           {/* Past deal flows */}
           <div>

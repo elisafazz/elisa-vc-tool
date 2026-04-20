@@ -69,8 +69,21 @@ function buildCopyAll(entry: DealFlowEntry): string {
   return lines.join('\n')
 }
 
-export default function DealFlowEntryView({ entry }: { entry: DealFlowEntry }) {
+type NotionState = 'idle' | 'pushing' | 'synced' | 'error'
+
+export default function DealFlowEntryView({
+  entry,
+  onNotionSynced,
+}: {
+  entry: DealFlowEntry
+  onNotionSynced?: (id: string, notionPageId: string, notionPageUrl: string) => void
+}) {
   const [copied, setCopied] = useState(false)
+  const [notionState, setNotionState] = useState<NotionState>(
+    entry.notionPageUrl ? 'synced' : 'idle',
+  )
+  const [notionUrl, setNotionUrl] = useState<string | null>(entry.notionPageUrl ?? null)
+  const [notionError, setNotionError] = useState<string | null>(null)
 
   async function copyAll() {
     try {
@@ -78,6 +91,27 @@ export default function DealFlowEntryView({ entry }: { entry: DealFlowEntry }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     } catch {}
+  }
+
+  async function pushToNotion() {
+    if (notionState === 'pushing' || notionState === 'synced') return
+    setNotionState('pushing')
+    setNotionError(null)
+    try {
+      const res = await fetch('/api/deal-flow/notion-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: entry.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Sync failed')
+      setNotionUrl(data.notionPageUrl)
+      setNotionState('synced')
+      if (onNotionSynced) onNotionSynced(entry.id, data.notionPageId, data.notionPageUrl)
+    } catch (err) {
+      setNotionError(err instanceof Error ? err.message : 'Unknown error')
+      setNotionState('error')
+    }
   }
 
   return (
@@ -88,20 +122,59 @@ export default function DealFlowEntryView({ entry }: { entry: DealFlowEntry }) {
           <h3 className="font-display text-xl text-white" style={{ letterSpacing: '-0.2px' }}>
             {entry.companyName}
           </h3>
-          <p className="text-white/30 text-xs mt-0.5">Generated entry — ready to paste into Notion</p>
+          <p className="text-white/30 text-xs mt-0.5">
+            {notionState === 'synced' ? 'Synced to Notion' : 'Generated entry'}
+          </p>
         </div>
-        <button
-          onClick={copyAll}
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors
-            border-red-500/30 text-red-400 bg-red-500/10 hover:bg-red-500/20"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>
-          {copied ? 'Copied all' : 'Copy all'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={copyAll}
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors
+              border-white/15 text-white/60 bg-white/5 hover:bg-white/10"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            {copied ? 'Copied' : 'Copy all'}
+          </button>
+          {notionState === 'synced' && notionUrl ? (
+            <a
+              href={notionUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors
+                border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <path d="M15 3h6v6"/>
+                <path d="M10 14L21 3"/>
+              </svg>
+              View in Notion
+            </a>
+          ) : (
+            <button
+              onClick={pushToNotion}
+              disabled={notionState === 'pushing'}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors
+                border-red-500/30 text-red-400 bg-red-500/10 hover:bg-red-500/20
+                disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              {notionState === 'pushing' ? 'Adding...' : notionState === 'error' ? 'Retry Add to Notion' : 'Add to Notion'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {notionError && (
+        <div className="px-6 py-2 bg-red-500/5 border-b border-red-500/15 text-red-400 text-xs">
+          {notionError}
+        </div>
+      )}
 
       {/* Fields */}
       <div className="px-6 py-2">

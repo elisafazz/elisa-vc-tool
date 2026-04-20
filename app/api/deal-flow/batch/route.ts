@@ -84,6 +84,14 @@ export async function POST(req: NextRequest) {
           status: 'Contacted',
           websiteUrl: (extracted.websiteUrl as string | null) ?? null,
           contactBackground: item.contactBackground || '',
+          relatedScientist: (extracted.relatedScientist as string | null) ?? null,
+          healthtech: Array.isArray(extracted.healthtech) ? (extracted.healthtech as string[]) : [],
+          nda: false,
+          ndaExpired: null,
+          notDisclosed: false,
+          filesMediaUrl: null,
+          notionPageId: null,
+          notionPageUrl: null,
         }
 
         await writeDealFlow(entry)

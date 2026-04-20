@@ -51,13 +51,21 @@ export interface DealFlowEntry {
   tag: string | null
   country: string | null
   jobTitleName: string | null
+  relatedScientist: string | null
   bioClassification: string | null
   bioDiseaseArea: string | null
   bioModality: string | null
+  healthtech: string[]
   nextSeries: string | null
   stage: string | null
   personInCharge: string
+  nda: boolean
+  ndaExpired: string | null
   status: string
+  notDisclosed: boolean
   websiteUrl: string | null
   contactBackground: string
+  filesMediaUrl: string | null
+  notionPageId: string | null
+  notionPageUrl: string | null
 }
