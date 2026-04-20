@@ -326,6 +326,11 @@ export default function DealFlowClient() {
   const [batchResults, setBatchResults] = useState<{ fileName: string; entry?: DealFlowEntry; error?: string }[]>([])
   const [batchError, setBatchError] = useState<string | null>(null)
 
+  // Bulk "Add all to Notion"
+  const [bulkSyncing, setBulkSyncing] = useState(false)
+  const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number } | null>(null)
+  const [bulkSyncSummary, setBulkSyncSummary] = useState<{ ok: number; failed: number } | null>(null)
+
   // Shared state
   const [history, setHistory] = useState<DealFlowEntry[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
@@ -442,6 +447,41 @@ export default function DealFlowClient() {
   // Expand / collapse all
   function toggleAllExpanded(expand: boolean) {
     setBatchFiles(prev => prev.map(f => ({ ...f, expanded: expand })))
+  }
+
+  // Bulk: push every unsynced batch entry to Notion sequentially
+  async function bulkAddToNotion() {
+    const unsynced = batchResults
+      .map(r => r.entry)
+      .filter((e): e is DealFlowEntry => !!e && !e.notionPageId)
+    if (!unsynced.length || bulkSyncing) return
+
+    setBulkSyncing(true)
+    setBulkSyncSummary(null)
+    setBulkSyncProgress({ done: 0, total: unsynced.length })
+
+    let ok = 0
+    let failed = 0
+    for (let i = 0; i < unsynced.length; i++) {
+      const entry = unsynced[i]
+      try {
+        const res = await fetch('/api/deal-flow/notion-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entryId: entry.id }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Sync failed')
+        handleNotionSynced(entry.id, data.notionPageId, data.notionPageUrl)
+        ok++
+      } catch {
+        failed++
+      }
+      setBulkSyncProgress({ done: i + 1, total: unsynced.length })
+    }
+
+    setBulkSyncing(false)
+    setBulkSyncSummary({ ok, failed })
   }
 
   // Called when an entry is successfully synced to Notion — keeps result/history/batch in sync
@@ -650,9 +690,44 @@ export default function DealFlowClient() {
               {/* Batch results */}
               {batchResults.length > 0 && (
                 <div className="space-y-4">
-                  <p className="text-white/40 text-xs uppercase tracking-wider font-medium">
-                    Results ({batchResults.filter(r => r.entry).length} succeeded, {batchResults.filter(r => r.error).length} failed)
-                  </p>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-white/40 text-xs uppercase tracking-wider font-medium">
+                      Results ({batchResults.filter(r => r.entry).length} succeeded, {batchResults.filter(r => r.error).length} failed)
+                    </p>
+                    {(() => {
+                      const unsyncedCount = batchResults.filter(r => r.entry && !r.entry.notionPageId).length
+                      const allSynced = unsyncedCount === 0 && batchResults.some(r => r.entry)
+                      if (allSynced) {
+                        return (
+                          <span className="text-emerald-400/80 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/5">
+                            All synced to Notion
+                          </span>
+                        )
+                      }
+                      return (
+                        <button
+                          onClick={bulkAddToNotion}
+                          disabled={bulkSyncing || unsyncedCount === 0}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border transition-colors
+                            border-red-500/30 text-red-400 bg-red-500/10 hover:bg-red-500/20
+                            disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 5v14M5 12h14"/>
+                          </svg>
+                          {bulkSyncing && bulkSyncProgress
+                            ? `Adding... (${bulkSyncProgress.done}/${bulkSyncProgress.total})`
+                            : `Add all to Notion (${unsyncedCount})`}
+                        </button>
+                      )
+                    })()}
+                  </div>
+                  {bulkSyncSummary && !bulkSyncing && (
+                    <p className={`text-xs ${bulkSyncSummary.failed > 0 ? 'text-red-400' : 'text-emerald-400/80'}`}>
+                      Synced {bulkSyncSummary.ok} to Notion
+                      {bulkSyncSummary.failed > 0 ? ` · ${bulkSyncSummary.failed} failed (see individual cards)` : ''}
+                    </p>
+                  )}
                   {batchResults.map((r, i) => (
                     <div key={i}>
                       {r.entry ? (

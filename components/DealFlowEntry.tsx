@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { DealFlowEntry } from '@/lib/types'
 
 function CopyButton({ value }: { value: string }) {
@@ -84,6 +84,14 @@ export default function DealFlowEntryView({
   )
   const [notionUrl, setNotionUrl] = useState<string | null>(entry.notionPageUrl ?? null)
   const [notionError, setNotionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (entry.notionPageUrl) {
+      setNotionUrl(entry.notionPageUrl)
+      setNotionState('synced')
+      setNotionError(null)
+    }
+  }, [entry.notionPageUrl])
 
   async function copyAll() {
     try {
